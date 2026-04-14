@@ -1,31 +1,15 @@
 {
-  "name": "finmatch",
-  "description": "Dynamic Worker Loaders — spin up sandboxed, disposable isolates at runtime",
+  "name": "finmatch-romania",
+  "version": "0.1.0",
+  "description": "Motor inteligent de căutare pentru programe de finanțare din România și UE",
   "private": true,
-  "type": "module",
-  "version": "0.0.0",
   "scripts": {
-    "start": "vite dev",
-    "deploy": "vite build && wrangler deploy",
-    "types": "wrangler types env.d.ts --include-runtime false"
-  },
-  "dependencies": {
-    "@cloudflare/kumo": "^1.18.0",
-    "@phosphor-icons/react": "^2.1.10",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "tail": "wrangler tail"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.31.2",
-    "@cloudflare/workers-types": "^4.20260411.1",
-    "@tailwindcss/vite": "^4",
-    "@types/node": "^25.6.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "tailwindcss": "^4.2.2",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.8",
-    "wrangler": "^4.81.1"
+    "wrangler": "^3.0.0"
   }
 }
