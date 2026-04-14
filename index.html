@@ -1,20 +1,3011 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.ico" />
-    <title>Dynamic Workers</title>
-    <script>
-      (() => {
-        const mode = localStorage.getItem("theme") || "light";
-        document.documentElement.setAttribute("data-mode", mode);
-        document.documentElement.style.colorScheme = mode;
-      })();
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/client.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinMatch România — Motor de căutare finanțări</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f3ee;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --ink: #1a1814;
+  --ink2: #5a5550;
+  --ink3: #9a9590;
+  --accent: #1a5c38;
+  --accent-light: #e8f4ed;
+  --accent2: #d4500a;
+  --accent2-light: #fdf0e8;
+  --warn: #c28900;
+  --warn-light: #fdf8e8;
+  --border: rgba(26,24,20,0.12);
+  --border2: rgba(26,24,20,0.06);
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --shadow: 0 1px 3px rgba(26,24,20,0.08), 0 4px 16px rgba(26,24,20,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* NAV */
+nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0;
+  list-style: none;
+  margin-left: auto;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 13px;
+  color: var(--ink2);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 400;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+
+.nav-links a:hover, .nav-links a.active {
+  background: var(--surface2);
+  color: var(--ink);
+}
+
+.nav-cta {
+  background: var(--ink) !important;
+  color: var(--bg) !important;
+  font-weight: 500 !important;
+  margin-left: 8px;
+}
+.nav-cta:hover { background: #333 !important; }
+
+/* HERO */
+.hero {
+  padding: 5rem 2rem 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 100px;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.3px;
+}
+
+.hero h1 {
+  font-family: var(--font-head);
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: var(--ink);
+  margin-bottom: 1.25rem;
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.hero p {
+  font-size: 17px;
+  color: var(--ink2);
+  max-width: 540px;
+  margin: 0 auto 2.5rem;
+  font-weight: 300;
+  line-height: 1.7;
+}
+
+/* SEARCH BAR */
+.search-wrap {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto 1.5rem;
+}
+
+.search-bar {
+  display: flex;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26,92,56,0.1), var(--shadow);
+}
+
+.search-icon {
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  color: var(--ink3);
+  flex-shrink: 0;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 14px 0;
+}
+
+.search-bar input::placeholder { color: var(--ink3); font-weight: 300; }
+
+.search-btn {
+  margin: 6px;
+  padding: 8px 22px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.search-btn:hover { background: #13452a; }
+
+.quick-searches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.quick-tag {
+  font-size: 12px;
+  color: var(--ink2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 5px 12px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 400;
+}
+
+.quick-tag:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* STATS ROW */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 4rem;
+}
+
+.stat {
+  text-align: center;
+  padding: 1rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.stat:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.stat:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+
+.stat-num {
+  font-family: var(--font-head);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--ink3);
+  font-weight: 300;
+}
+
+/* MAIN LAYOUT */
+.main {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* FILTERS PANEL */
+.filters-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  position: sticky;
+  top: 72px;
+}
+
+.filters-title {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filters-title button {
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.filter-section { margin-bottom: 1.25rem; }
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink2);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  color: var(--ink2);
+  cursor: pointer;
+  background: transparent;
+  font-family: var(--font-body);
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip.active { background: var(--accent); color: white; border-color: var(--accent); }
+.chip.warn { background: var(--warn); color: white; border-color: var(--warn); }
+
+.chip-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26,92,56,0.15);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 500;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 100px;
+  margin-left: 4px;
+}
+.chip.active .chip-count { background: rgba(255,255,255,0.25); color: white; }
+
+.filter-sep {
+  border: none;
+  border-top: 1px solid var(--border2);
+  margin: 1rem 0;
+}
+
+/* RESULTS */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.results-count {
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+.results-count strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.sort-select {
+  font-family: var(--font-body);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  background: var(--surface);
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+}
+
+/* OPPORTUNITY CARDS */
+.opp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  position: relative;
+}
+
+.opp-card:hover {
+  border-color: rgba(26,92,56,0.3);
+  box-shadow: 0 2px 12px rgba(26,92,56,0.08);
+}
+
+.opp-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 100px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-badge.active {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.status-badge.active::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-badge.upcoming {
+  background: var(--warn-light);
+  color: var(--warn);
+}
+
+.status-badge.closed {
+  background: var(--surface2);
+  color: var(--ink3);
+}
+
+.opp-title {
+  font-family: var(--font-head);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+  flex: 1;
+  letter-spacing: -0.2px;
+}
+
+.source-tier {
+  font-size: 11px;
+  color: var(--ink3);
+  background: var(--surface2);
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  font-weight: 400;
+}
+
+.source-tier.tier1 {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.opp-summary {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.55;
+  margin-bottom: 12px;
+  font-weight: 300;
+}
+
+.opp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.meta-tag {
+  font-size: 11px;
+  background: var(--surface2);
+  color: var(--ink2);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-weight: 400;
+}
+
+.meta-tag.domain { background: #eef3ff; color: #3355aa; }
+.meta-tag.region { background: var(--accent-light); color: var(--accent); }
+
+.opp-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border2);
+}
+
+.grant-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.grant-val {
+  font-family: var(--font-head);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.grant-label {
+  font-size: 11px;
+  color: var(--ink3);
+  font-weight: 300;
+}
+
+.deadline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+.deadline.urgent { color: var(--accent2); font-weight: 500; }
+
+.opp-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-save {
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+  font-size: 14px;
+}
+
+.btn-save:hover { border-color: var(--ink); color: var(--ink); }
+.btn-save.saved { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+.btn-detail {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: none;
+  padding: 6px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.12s;
+}
+
+.btn-detail:hover { background: #d0eadb; }
+
+/* DETAIL MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,24,20,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  max-width: 720px;
+  width: 100%;
+  margin-top: 24px;
+  overflow: hidden;
+  transform: translateY(16px);
+  transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-header {
+  background: var(--surface2);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink2);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+}
+
+.modal-close:hover { background: var(--surface2); }
+
+.modal-body { padding: 1.5rem; }
+
+.modal-section { margin-bottom: 1.5rem; }
+.modal-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--ink3);
+  margin-bottom: 0.6rem;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-stat {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
+
+.modal-stat-val {
+  font-family: var(--font-head);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.modal-stat-label {
+  font-size: 12px;
+  color: var(--ink3);
+  font-weight: 300;
+}
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--accent);
+  border: 1px solid rgba(26,92,56,0.2);
+  background: var(--accent-light);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  margin-right: 8px;
+  transition: background 0.1s;
+}
+
+.source-link:hover { background: #d0eadb; }
+
+.disclaimer {
+  background: var(--warn-light);
+  border: 1px solid rgba(194,137,0,0.2);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 12px;
+  color: var(--warn);
+  margin-top: 1rem;
+  line-height: 1.5;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--ink3);
+}
+
+.empty-state h3 {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  color: var(--ink2);
+  margin-bottom: 0.5rem;
+}
+
+/* LOADING */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--border2) 50%, var(--surface2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* FOOTER */
+footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 12px;
+  font-weight: 300;
+}
+
+footer strong { color: rgba(255,255,255,0.7); font-weight: 500; }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--ink);
+  color: white;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 400;
+  z-index: 300;
+  transform: translateY(8px);
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ADMIN TABS */
+.admin-tab {
+  padding: 8px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-bottom: -1px;
+}
+.admin-tab:hover { color: var(--ink); }
+.admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* ADMIN STAT CARD */
+.admin-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+.admin-stat-val { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.5px; }
+.admin-stat-label { font-size: 12px; color: var(--ink3); margin-top: 2px; font-weight: 300; }
+
+/* SOURCE CARD */
+.source-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+}
+.source-indicator {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.source-indicator.ok { background: var(--accent); }
+.source-indicator.warn { background: var(--warn); }
+.source-indicator.err { background: var(--accent2); }
+
+/* COMPARE MODAL */
+.compare-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,24,20,0.55);
+  z-index: 300;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px; overflow-y: auto;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  backdrop-filter: blur(3px);
+}
+.compare-overlay.open { opacity: 1; pointer-events: all; }
+.compare-modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  max-width: 960px; width: 100%; margin-top: 16px;
+  overflow: hidden;
+  transform: translateY(12px); transition: transform 0.2s;
+}
+.compare-overlay.open .compare-modal { transform: translateY(0); }
+
+/* CHECK ON CARD */
+.compare-check {
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: transparent;
+  transition: all 0.12s; flex-shrink: 0;
+}
+.compare-check.checked { background: var(--accent); border-color: var(--accent); color: white; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  nav { padding: 0 1rem; }
+  .hero { padding: 3rem 1rem 2rem; }
+  .main { grid-template-columns: 1fr; padding: 0 1rem 2rem; }
+  .filters-panel { position: static; }
+  .stats-row { flex-wrap: wrap; }
+  .modal-grid { grid-template-columns: 1fr; }
+  .source-card { grid-template-columns: auto 1fr; }
+  .nav-links li:nth-child(4), .nav-links li:nth-child(5) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <span class="logo-dot"></span>
+    FinMatch
+    <span style="color:var(--ink3);font-weight:400;font-size:14px;margin-left:-4px">România</span>
+  </div>
+  <ul class="nav-links">
+    <li><a class="active" onclick="showView('search')">Căutare</a></li>
+    <li><a onclick="showView('saved')">Salvate</a></li>
+    <li><a onclick="showView('alerts')">Alerte</a></li>
+    <li><a onclick="showView('sources')">Surse</a></li>
+    <li><a onclick="showView('admin')">Admin</a></li>
+    <li><a class="nav-cta" onclick="showToast('Înregistrare disponibilă în curând!')">Cont nou</a></li>
+  </ul>
+</nav>
+
+<div id="view-search">
+  <div class="hero">
+    <div class="hero-badge">
+      <span style="width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;"></span>
+      293 oportunități active în 2026
+    </div>
+    <h1>Găsește finanțarea<br>potrivită pentru tine <em>instant</em></h1>
+    <p>Motor inteligent de căutare pentru programe de finanțare din România și UE — surse oficiale, actualizate zilnic.</p>
+
+    <div class="search-wrap">
+      <div class="search-bar">
+        <div class="search-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <input type="text" id="search-input" placeholder="ex: grant digitalizare IMM, fonduri energie..." autocomplete="off">
+        <button class="search-btn" onclick="doSearch()">Caută</button>
+      </div>
+    </div>
+
+    <div class="quick-searches">
+      <span class="quick-tag" onclick="setSearch('digitalizare IMM')">Digitalizare IMM</span>
+      <span class="quick-tag" onclick="setSearch('startup grant activ')">Startup grant</span>
+      <span class="quick-tag" onclick="setSearch('energie renovare')">Eficiență energetică</span>
+      <span class="quick-tag" onclick="setSearch('fonduri AFIR agricultură')">Fonduri AFIR</span>
+      <span class="quick-tag" onclick="setSearch('ONG incluziune socială')">ONG incluziune</span>
+      <span class="quick-tag" onclick="setSearch('UAT infrastructură vest')">UAT Vest</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num" id="cnt-active">293</div>
+        <div class="stat-label">Active acum</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">11</div>
+        <div class="stat-label">Surse indexate</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">€4.1B</div>
+        <div class="stat-label">Buget total disponibil</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="cnt-today">28</div>
+        <div class="stat-label">Actualizări azi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <aside class="filters-panel">
+      <div class="filters-title">
+        Filtre
+        <button onclick="resetFilters()">Resetează</button>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-label">Status</div>
+        <div class="filter-chips">
+          <button class="chip active" onclick="toggleChip(this,'status')" data-val="ACTIV">Activ</button>
+          <button class="chip" onclick="toggleChip(this,'status')" data-val="URMEAZĂ">Urmează</button>
+          <button class="chip" onclick="toggleChip(this,'status')" data-val="ÎNCHIS">Închis</button>
+        </div>
+      </div>
+
+      <hr class="filter-sep">
+
+      <div class="filter-section">
+        <div class="filter-label">Domeniu</div>
+        <div class="filter-chips">
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Digitalizare">Digitalizare</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Energie">Energie</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Agricultură">Agricultură</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Educație">Educație</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Antreprenoriat">Antreprenoriat</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Infrastructură">Infrastructură</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Mediu">Mediu</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Sănătate">Sănătate</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Cercetare / inovare">Cercetare</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Incluziune socială">Incluziune</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Cultură">Cultură</button>
+          <button class="chip" onclick="toggleChip(this,'domain')" data-val="Turism">Turism</button>
+        </div>
+      </div>
+
+      <hr class="filter-sep">
+
+      <div class="filter-section">
+        <div class="filter-label">Tip beneficiar</div>
+        <div class="filter-chips">
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="IMM">IMM</button>
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="Startup">Startup</button>
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="ONG">ONG</button>
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="UAT">UAT</button>
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="Fermier">Fermier</button>
+          <button class="chip" onclick="toggleChip(this,'beneficiary')" data-val="Universitate">Universitate</button>
+        </div>
+      </div>
+
+      <hr class="filter-sep">
+
+      <div class="filter-section">
+        <div class="filter-label">Regiune</div>
+        <div class="filter-chips">
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="Vest">Vest</button>
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="Nord-Vest">Nord-Vest</button>
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="Nord-Est">Nord-Est</button>
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="Centru">Centru</button>
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="București-Ilfov">Buc-Ilfov</button>
+          <button class="chip" onclick="toggleChip(this,'region')" data-val="Național">Național</button>
+        </div>
+      </div>
+
+      <hr class="filter-sep">
+
+      <div class="filter-section">
+        <div class="filter-label">Grant maxim (€)</div>
+        <div style="padding:4px 2px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);margin-bottom:6px;">
+            <span>€0</span>
+            <span id="grant-val-display">Orice</span>
+          </div>
+          <input type="range" id="grant-filter" min="0" max="50000000" step="50000" value="50000000"
+            style="width:100%;accent-color:var(--accent);"
+            oninput="updateGrantFilter(this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:4px;">
+            <span>0</span><span>500K</span><span>5M</span><span>50M+</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="filter-sep">
+
+      <div class="filter-section">
+        <div class="filter-label">Sursă</div>
+        <div class="filter-chips">
+          <button class="chip" onclick="toggleChip(this,'source')" data-val="Oficială">Oficială</button>
+          <button class="chip" onclick="toggleChip(this,'source')" data-val="Editorială">Editorială</button>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="results-header">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="results-count"><strong id="results-count">0</strong> rezultate</div>
+          <div id="compare-bar" style="display:none;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--ink2);">Comparare: <strong id="compare-count">0</strong>/3</span>
+            <button onclick="openCompare()" style="font-size:11px;background:var(--accent);color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Compară →</button>
+            <button onclick="clearCompare()" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:4px 8px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">×</button>
+          </div>
+        </div>
+        <select class="sort-select" id="sort-select" onchange="renderResults()">
+          <option value="relevance">Relevanță</option>
+          <option value="deadline">Termen limită</option>
+          <option value="grant_desc">Grant maxim ↓</option>
+          <option value="newest">Cele mai noi</option>
+        </select>
+      </div>
+      <div id="results-list"></div>
+    </main>
+  </div>
+</div>
+
+<div id="view-saved" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
+  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:2rem;letter-spacing:-0.5px">Oportunități salvate</h2>
+  <div id="saved-list"></div>
+</div>
+
+<div id="view-alerts" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
+  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:1rem;letter-spacing:-0.5px">Alerte & căutări salvate</h2>
+  <p style="color:var(--ink2);font-size:14px;margin-bottom:2rem;font-weight:300;">Vei fi notificat când apar oportunități noi pentru criteriile salvate.</p>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
+      <input type="text" id="alert-query" placeholder="Cuvinte cheie..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:14px;outline:none;background:var(--surface);">
+      <button onclick="saveAlert()" style="background:var(--accent);color:white;border:none;padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">+ Adaugă alertă</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink3);font-weight:300;">Notificări prin email când sunt detectate oportunități noi pentru această căutare.</p>
+  </div>
+
+  <div id="alerts-list"></div>
+</div>
+
+<!-- SOURCES VIEW -->
+<div id="view-sources" style="display:none;max-width:960px;margin:0 auto;padding:2rem 2rem 4rem;">
+  <div style="margin-bottom:2rem;">
+    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:0.4rem;">Surse indexate</h2>
+    <p style="color:var(--ink2);font-size:14px;font-weight:300;">Starea și configurația surselor monitorizate de FinMatch România.</p>
+  </div>
+  <div id="sources-grid"></div>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="view-admin" style="display:none;max-width:960px;margin:0 auto;padding:2rem 2rem 4rem;">
+  <div style="margin-bottom:2rem;">
+    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:0.4rem;">Panou administrativ</h2>
+    <p style="color:var(--ink2);font-size:14px;font-weight:300;">Review queue, surse cu erori, oportunități noi detectate și duplicate suspecte.</p>
+  </div>
+
+  <!-- Admin stat cards -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:2rem;" id="admin-stats"></div>
+
+  <!-- Tabs -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.5rem;" id="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('review',this)">Review queue</button>
+    <button class="admin-tab" onclick="switchAdminTab('sources',this)">Surse monitorizate</button>
+    <button class="admin-tab" onclick="switchAdminTab('new',this)">Noi detectate</button>
+    <button class="admin-tab" onclick="switchAdminTab('dupes',this)">Duplicate</button>
+  </div>
+  <div id="admin-content"></div>
+</div>
+
+<!-- COMPARE MODAL -->
+<div class="compare-overlay" id="compare-overlay" onclick="closeCompare(event)">
+  <div class="compare-modal">
+    <div style="background:var(--surface2);padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="font-family:var(--font-head);font-size:1.1rem;font-weight:800;letter-spacing:-0.3px;">Comparare oportunități</h3>
+      <button onclick="closeCompare()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink2);line-height:1;">×</button>
+    </div>
+    <div id="compare-content" style="overflow-x:auto;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- SOURCES VIEW -->
+<div id="view-sources" style="display:none;max-width:900px;margin:3rem auto;padding:0 2rem 4rem;">
+  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-0.5px">Surse indexate</h2>
+  <p style="color:var(--ink2);font-size:14px;margin-bottom:2rem;font-weight:300;">Toate sursele de date monitorizate de FinMatch România, cu statusul lor de crawling și paginile specifice indexate.</p>
+  <div id="sources-grid"></div>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="view-admin" style="display:none;max-width:960px;margin:3rem auto;padding:0 2rem 4rem;">
+  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:.4rem;letter-spacing:-0.5px">Panou administrare</h2>
+  <p style="color:var(--ink2);font-size:14px;margin-bottom:2rem;font-weight:300;">Validare manuală, corecție oportunități și gestionarea surselor.</p>
+
+  <!-- stats row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:2rem;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;">
+      <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;" id="adm-total">0</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Total oportunități</div>
+    </div>
+    <div style="background:var(--accent-light);border:1px solid rgba(26,92,56,.15);border-radius:var(--radius);padding:1rem;">
+      <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;color:var(--accent);" id="adm-active">0</div>
+      <div style="font-size:11px;color:var(--accent);margin-top:2px;">Active</div>
+    </div>
+    <div style="background:var(--warn-light);border:1px solid rgba(194,137,0,.15);border-radius:var(--radius);padding:1rem;">
+      <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;color:var(--warn);" id="adm-review">0</div>
+      <div style="font-size:11px;color:var(--warn);margin-top:2px;">Necesită review</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;">
+      <div style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;" id="adm-sources">0</div>
+      <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Surse monitorizate</div>
+    </div>
+  </div>
+
+  <!-- review queue -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem;">
+    <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:var(--font-head);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Coadă de review</span>
+      <span style="font-size:11px;color:var(--ink3);">Oportunități cu confidence scăzut sau surse neconfirmate</span>
+    </div>
+    <div id="review-queue-list" style="max-height:340px;overflow-y:auto;"></div>
+  </div>
+
+  <!-- all opportunities table -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+    <div style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:var(--font-head);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;">Toate oportunitățile</span>
+      <input id="adm-search" oninput="renderAdminTable()" placeholder="Caută..." style="font-family:var(--font-body);font-size:13px;border:1px solid var(--border);border-radius:6px;padding:5px 10px;outline:none;background:var(--surface);color:var(--ink);width:200px;">
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="adm-table">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:10px 14px;font-weight:500;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Titlu</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:500;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Status</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:500;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Sursă</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:500;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Termen</th>
+            <th style="text-align:left;padding:10px 14px;font-weight:500;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;">Acțiuni</th>
+          </tr>
+        </thead>
+        <tbody id="adm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE OVERLAY -->
+<div class="compare-overlay" id="compare-overlay" onclick="closeCompare(event)">
+  <div class="compare-modal">
+    <div style="padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-family:var(--font-head);font-size:16px;font-weight:800;letter-spacing:-.3px;">Comparare oportunități</span>
+      <button onclick="closeCompare()" style="border:1px solid var(--border);border-radius:7px;background:var(--surface2);width:30px;height:30px;cursor:pointer;font-size:16px;">×</button>
+    </div>
+    <div id="compare-body" style="padding:1.5rem;overflow-x:auto;"></div>
+  </div>
+</div>
+
+<!-- COMPARE BAR (floating) -->
+<div id="compare-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:150;background:var(--ink);color:white;padding:14px 2rem;display:none;align-items:center;justify-content:space-between;gap:1rem;">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;" id="compare-bar-items"></div>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="openCompare()" style="background:var(--accent);color:white;border:none;padding:8px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">Compară →</button>
+    <button onclick="clearCompare()" style="background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.2);padding:8px 14px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer;">Golește</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  <strong>FinMatch România</strong> — Motor de căutare finanțări UE și naționale &nbsp;·&nbsp;
+  Sursele sunt indexate din platforme oficiale. Verificați întotdeauna sursa oficială pentru confirmarea finală a informațiilor.
+</footer>
+
+<script>
+const SOURCES = {
+  'mfe.gov.ro': {
+    name: 'MFE / MIPE', tier: 1, status: 'warn',
+    note: 'Blochează fetch direct — necesită Playwright în producție',
+    opps: 6,
+    pages: [
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/',
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/3/',
+      'https://mfe.gov.ro/pdd/',
+      'https://mfe.gov.ro/actualizare-ghidul-solicitantului-pnrr-unitati-sanitare/',
+      'https://mfe.gov.ro/calendar-apeluri-de-finantare/',
+    ]
+  },
+  'adrvest.ro': {
+    name: 'ADR Vest', tier: 1, status: 'ok', note: 'Accesibil, date în timp real', opps: 6,
+    pages: ['https://www.adrvest.ro','https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/','https://adrvest.ro/programul-sanatate-ghiduri-active/']
+  },
+  'adrnordest.ro': {
+    name: 'ADR Nord-Est', tier: 1, status: 'err', note: 'Returnează 403 — necesită agent de crawling dedicat', opps: 1,
+    pages: ['https://www.adrnordest.ro']
+  },
+  'oportunitati-ue.gov.ro': {
+    name: 'Oportunități UE Gov', tier: 1, status: 'ok', note: 'Accesibil, sursă Tier 1 principală', opps: 1,
+    pages: ['https://oportunitati-ue.gov.ro']
+  },
+  'afir.ro': {
+    name: 'AFIR', tier: 1, status: 'ok', note: 'Accesibil, apeluri agricultură', opps: 1,
+    pages: ['https://afir.ro']
+  },
+  'commission.europa.eu': {
+    name: 'Comisia Europeană', tier: 1, status: 'ok', note: 'API structurat disponibil', opps: 1,
+    pages: ['https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro']
+  },
+  'vest.ro': {
+    name: 'Vest.ro', tier: 1, status: 'ok', note: 'Accesibil', opps: 1,
+    pages: ['https://vest.ro']
+  },
+  'fonduri-structurale.ro': {
+    name: 'Fonduri Structurale', tier: 3, status: 'ok', note: 'Sursă editorială — necesită confirmare oficială', opps: 1,
+    pages: ['https://fonduri-structurale.ro']
+  },
+  'startupcafe.ro': {
+    name: 'StartupCafe', tier: 3, status: 'ok', note: 'Sursă editorială — necesită confirmare oficială', opps: 1,
+    pages: ['https://startupcafe.ro']
+  },
+};
+
+const OPPORTUNITIES = [
+  /* ── MFE / MIPE ──────────────────────────────────────────────────── */
+  {
+    id: 1, status: 'ACTIV',
+    title: 'PoCIDIF — HUB Antreprenorial Național (creare/operaționalizare)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/'],
+    program: 'PoCIDIF', callCode: 'PoCIDIF/HUB-ANTREPRENORIAL',
+    summary: 'Finanțare pentru crearea sau operaționalizarea unui HUB antreprenorial național — sprijin pentru ecosistemul de inovare, accelerare startup și transfer de cunoștințe.',
+    domains: ['Antreprenoriat', 'Digitalizare'], beneficiaries: ['IMM', 'Universitate'], regions: ['Național'],
+    grantMin: 500000, grantMax: 5000000, cofinancing: 15,
+    deadline: '2026-06-30', launchDate: '2026-01-01',
+    who: 'Consorții formate din instituții publice, universități, IMM-uri inovative, acceleratoare.',
+    activities: 'Infrastructură fizică și digitală pentru hub, programe mentorat, accelerare, evenimente ecosistem.',
+    isUrgent: false, confidence: 92
+  },
+  {
+    id: 2, status: 'ACTIV',
+    title: 'PNRR C16 REPowerEU — Granturi bonuri valorice energie regenerabilă (gospodării)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'PNRR / Componenta 16 REPowerEU / I4', callCode: 'OMIPE-6252/2024',
+    summary: 'Schema de granturi sub formă de bonuri valorice pentru gospodăriile care instalează sisteme de energie din surse regenerabile. Finanțare 50% grant, 50% împrumut PNRR.',
+    domains: ['Energie'], beneficiaries: ['IMM'], regions: ['Național'],
+    grantMin: 5000, grantMax: 30000, cofinancing: 0,
+    deadline: '2026-06-30', launchDate: '2025-06-01',
+    who: 'Gospodării individuale și mici consumatori care instalează sisteme fotovoltaice sau pompe de căldură.',
+    activities: 'Achiziție și instalare panouri fotovoltaice, baterii stocare, pompe de căldură din surse regenerabile.',
+    isUrgent: false, confidence: 88
+  },
+  {
+    id: 3, status: 'ACTIV',
+    title: 'Programul pentru Dezvoltare Durabilă (PDD) — Conservarea speciilor și habitatelor',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/pdd/',
+    sourcePages: ['https://mfe.gov.ro/pdd/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/3/'],
+    program: 'PDD 2021-2027', callCode: 'PDD/HABITATE/2026',
+    summary: 'Ghid pentru proiecte dedicate menținerii și îmbunătățirii stării de conservare a speciilor și habitatelor prin măsuri de conservare activă și management ecologic.',
+    domains: ['Mediu'], beneficiaries: ['ONG', 'UAT', 'Universitate'], regions: ['Național'],
+    grantMin: 100000, grantMax: 3000000, cofinancing: 15,
+    deadline: '2026-09-30', launchDate: '2026-02-18',
+    who: 'ONG-uri de mediu, universități, institute de cercetare ecologică, UAT-uri cu arii protejate.',
+    activities: 'Măsuri de conservare habitate, monitoring biodiversitate, refacere ecosisteme, educație ecologică.',
+    isUrgent: false, confidence: 85
+  },
+  {
+    id: 4, status: 'ACTIV',
+    title: 'Programul Sănătate — Infrastructură PNRR unități sanitare (ghid actualizat)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/actualizare-ghidul-solicitantului-pnrr-unitati-sanitare/',
+    sourcePages: ['https://mfe.gov.ro/actualizare-ghidul-solicitantului-pnrr-unitati-sanitare/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/'],
+    program: 'Programul Sănătate / PNRR', callCode: 'PS/UNITATI-SANITARE/PNRR',
+    summary: 'Finanțare pentru construcția, dotarea și modernizarea unităților sanitare publice, cu accent pe reducerea disparităților regionale în accesul la servicii medicale.',
+    domains: ['Sănătate'], beneficiaries: ['UAT', 'Universitate'], regions: ['Național'],
+    grantMin: 1000000, grantMax: 50000000, cofinancing: 0,
+    deadline: '2026-06-30', launchDate: '2025-01-01',
+    who: 'Spitale publice, autorități locale, ministere cu competențe în sănătate.',
+    activities: 'Construcție/reabilitare clădiri, achiziție echipamente medicale, digitalizare sisteme clinice.',
+    isUrgent: false, confidence: 90
+  },
+  {
+    id: 5, status: 'ACTIV',
+    title: 'PoIDS — Servicii comunitare pentru copii și familii (ITI Moții, Țara de Piatră)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'PoIDS / Incluziune și Demnitate Socială', callCode: 'PoIDS/COPII-FAMILIE/ITI',
+    summary: 'Sprijin pentru servicii comunitare destinate copiilor și familiilor aflate în situații de risc, prevenirea separării și reintegrarea în familie.',
+    domains: ['Incluziune socială'], beneficiaries: ['ONG', 'UAT'], regions: ['Național'],
+    grantMin: 50000, grantMax: 500000, cofinancing: 10,
+    deadline: '2026-05-31', launchDate: '2025-11-01',
+    who: 'ONG-uri, autorități locale din teritoriul ITI Moții și Țara de Piatră.',
+    activities: 'Servicii de consiliere familială, centre de zi, programe reintegrare, asistență socială.',
+    isUrgent: false, confidence: 78
+  },
+  {
+    id: 6, status: 'URMEAZĂ',
+    title: 'PTJ — Mobilitate verde și energie accesibilă (apeluri competitive + necompetitive)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/ptj/calendar-apeluri-de-proiecte/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/MOBILITATE-VERDE/2026',
+    summary: 'Apeluri competitive și necompetitive pentru "Energie verde accesibilă și mobilitate nepoluantă", Prioritățile 1-6, metodologii aprobate feb. 2026.',
+    domains: ['Energie', 'Infrastructură'], beneficiaries: ['UAT', 'IMM'], regions: ['Național'],
+    grantMin: 200000, grantMax: 10000000, cofinancing: 20,
+    deadline: 'Estimat T3 2026', launchDate: '2026-03-01',
+    who: 'UAT-uri, companii din zone de tranziție justă, operatori transport public.',
+    activities: 'Transport electric, stații reîncărcare, producție energie verde locală, eficiență energetică mobilitate.',
+    isUrgent: false, confidence: 72
+  },
+  /* ── ADR VEST ─────────────────────────────────────────────────────── */
+  {
+    id: 7, status: 'ACTIV',
+    title: 'ADR Vest — Investiții IMM Valea Jiului (Tranziție Justă)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă / PTJ IMM', callCode: 'PTJ/IMM/VALEAJIULUI/2025',
+    summary: 'Finanțare pentru investiții productive în IMM-uri din Valea Jiului. Sprijin pentru diversificarea economică în zonele afectate de tranziția de la cărbune.',
+    domains: ['Antreprenoriat', 'Energie'], beneficiaries: ['IMM'], regions: ['Vest'],
+    grantMin: 50000, grantMax: 2000000, cofinancing: 30,
+    deadline: '2026-02-28', launchDate: '2025-11-01',
+    who: 'IMM-uri cu sediu/punct de lucru în zona de tranziție justă (Valea Jiului, Hunedoara).',
+    activities: 'Investiții în capacități productive, echipamente, tehnologii curate, locuri de muncă.',
+    isUrgent: true, confidence: 97
+  },
+  {
+    id: 8, status: 'ACTIV',
+    title: 'ADR Vest — Parcuri industriale și tehnologice (Tranziție Justă)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/parcuri-industriale-si-tehnologice/',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/PARCURI-IND/2026',
+    summary: 'Sprijin pentru crearea și dezvoltarea parcurilor industriale și tehnologice în Regiunea Vest, pentru atragerea de investiții și locuri de muncă.',
+    domains: ['Infrastructură', 'Antreprenoriat'], beneficiaries: ['UAT', 'IMM'], regions: ['Vest'],
+    grantMin: 1000000, grantMax: 20000000, cofinancing: 30,
+    deadline: '2026-07-28', launchDate: '2026-01-28',
+    who: 'Administrații publice locale, companii de administrare parcuri industriale din zona de tranziție.',
+    activities: 'Infrastructură utilități, drumuri interne, clădiri comune, digitalizare management parc.',
+    isUrgent: false, confidence: 96
+  },
+  {
+    id: 9, status: 'ACTIV',
+    title: 'ADR Vest — Energie regenerabilă Tranziție Justă',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/programul-tranzitie-justa_dezvoltarea-surselor-de-energie-regenerabila',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/ENERGIE-REG/2026',
+    summary: 'Finanțare pentru dezvoltarea surselor de energie regenerabilă în Regiunea Vest — eolian, solar, biomasă — ca parte a tranziției economice.',
+    domains: ['Energie'], beneficiaries: ['IMM', 'UAT'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 10000000, cofinancing: 25,
+    deadline: '2026-08-26', launchDate: '2026-02-25',
+    who: 'IMM-uri, UAT-uri, companii de energie din zona de tranziție justă a Regiunii Vest.',
+    activities: 'Instalare capacități SRE, stocare energie, racordare la rețea, eficiență energetică combinată.',
+    isUrgent: false, confidence: 96
+  },
+  {
+    id: 10, status: 'ACTIV',
+    title: 'ADR Vest — Vest Ventures: Fond de accelerare startup (până la €100K/startup)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/vest-ventures-da-startul-primei-cohorte-noua-startup-uri-selectate-intra-intr-un-program-de-accelerare-cu-investitii-de-pana-la-100-000-euro/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest / Vest Ventures', callCode: 'PRV/VESTVENTURES/C1',
+    summary: 'Primul accelerator regional cu finanțare europeană — 9 startup-uri selectate în prima cohortă. Investiții de până la €100K per startup, plus mentorat și acces la piață.',
+    domains: ['Antreprenoriat', 'Digitalizare'], beneficiaries: ['Startup'], regions: ['Vest'],
+    grantMin: 50000, grantMax: 100000, cofinancing: 0,
+    deadline: 'Cohortă 2 — estimat T3 2026', launchDate: '2026-04-06',
+    who: 'Startup-uri inovative din Regiunea Vest, în faza seed/early stage, cu produs demonstrabil.',
+    activities: 'Program accelerare 6 luni, investiție în capital, mentorat, acces la clienți pilot.',
+    isUrgent: false, confidence: 99
+  },
+  {
+    id: 11, status: 'ACTIV',
+    title: 'ADR Vest — Patrimoniu cultural UNESCO Vest (€4M)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/finantari-de-4-milioane-de-euro-pentru-protejarea-si-valorificarea-patrimoniului-unesco-din-regiunea-vest/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest 2021-2027', callCode: 'PRV/PATRIMONIU-UNESCO/2026',
+    summary: 'Fonduri europene pentru protejarea și valorificarea obiectivelor de patrimoniu cultural UNESCO din Regiunea Vest — restaurare, digitalizare și promovare turistică.',
+    domains: ['Cultură', 'Turism'], beneficiaries: ['UAT', 'ONG'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 4000000, cofinancing: 20,
+    deadline: '2026-07-31', launchDate: '2026-04-01',
+    who: 'Autorități locale, ONG-uri și instituții culturale care administrează obiective UNESCO.',
+    activities: 'Restaurare monumente, digitalizare patrimoniu, trasee turistice, promovare internațională.',
+    isUrgent: false, confidence: 99
+  },
+  {
+    id: 12, status: 'ACTIV',
+    title: 'ADR Vest — Spital Copii "Louis Țurcanu" Timișoara (~€3M)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/investitie-de-aproape-3-milioane-de-euro-in-spitalul-de-copii-louis-turcanu-din-timisoara-prin-programul-regional-vest/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest 2021-2027', callCode: 'PRV/SANATATE/SPITAL-COPII',
+    summary: 'Investiție europeană de aproape €3M în dotarea și modernizarea Spitalului de Copii din Timișoara, principala unitate pediatrică a Regiunii Vest.',
+    domains: ['Sănătate'], beneficiaries: ['UAT'], regions: ['Vest'],
+    grantMin: 1000000, grantMax: 3000000, cofinancing: 15,
+    deadline: '2026-12-31', launchDate: '2026-04-08',
+    who: 'Unități spitalicești publice din Regiunea Vest prin Programul Regional Vest.',
+    activities: 'Dotare echipamente medicale, reabilitare secții, sisteme digitale de monitorizare.',
+    isUrgent: false, confidence: 99
+  },
+  /* ── ADR NORD-EST ─────────────────────────────────────────────────── */
+  {
+    id: 13, status: 'ACTIV',
+    title: 'ADR Nord-Est — Fonduri europene Regiunea Nord-Est 2021-2027',
+    source: 'adrnordest.ro', sourceTier: 1,
+    official_url: 'https://www.adrnordest.ro',
+    sourcePages: ['https://www.adrnordest.ro'],
+    program: 'Programul Regional Nord-Est 2021-2027', callCode: 'PRN-E/2026',
+    summary: 'Portal oficial al ADR Nord-Est cu apeluri active pentru IMM-uri, UAT-uri și ONG-uri din județele Bacău, Botoșani, Iași, Neamț, Suceava și Vaslui.',
+    domains: ['Antreprenoriat', 'Infrastructură', 'Digitalizare'], beneficiaries: ['IMM', 'UAT', 'ONG'], regions: ['Nord-Est'],
+    grantMin: 50000, grantMax: 15000000, cofinancing: 20,
+    deadline: 'Multiple apeluri — vezi portal', launchDate: '2024-01-01',
+    who: 'IMM-uri, UAT-uri, ONG-uri și instituții publice din Regiunea Nord-Est.',
+    activities: 'Investiții productive, digitalizare, infrastructură locală, incluziune socială.',
+    isUrgent: false, confidence: 60
+  },
+  /* ── Alte surse ───────────────────────────────────────────────────── */
+  {
+    id: 14, status: 'ACTIV',
+    title: 'PNDR — Investiții în exploatații agricole mici și medii',
+    source: 'afir.ro', sourceTier: 1, official_url: 'https://afir.ro',
+    sourcePages: ['https://afir.ro'],
+    program: 'PNDR 2023-2027 / SM 4.1', callCode: 'AFIR/2024/4.1/C1',
+    summary: 'Finanțare pentru modernizarea exploatațiilor agricole: utilaje, irigații, construcții ferme, procesare produse agricole, standarde UE.',
+    domains: ['Agricultură'], beneficiaries: ['Fermier'], regions: ['Național'],
+    grantMin: 10000, grantMax: 300000, cofinancing: 50,
+    deadline: '2026-07-31', launchDate: '2024-12-01',
+    who: 'Fermierii activi cu exploatații între 12.000 și 250.000 SO, înregistrați în Registrul Unic de Identificare.',
+    activities: 'Achiziție tractoare și combine, sisteme de irigații, construcții adăposturi animale.',
+    isUrgent: false, confidence: 94
+  },
+  {
+    id: 15, status: 'ACTIV',
+    title: 'Horizon Europe — Parteneriate cercetare și inovare',
+    source: 'commission.europa.eu', sourceTier: 1,
+    official_url: 'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro',
+    sourcePages: ['https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro'],
+    program: 'Horizon Europe 2024', callCode: 'HE/2024/RIA',
+    summary: 'Cel mai amplu program european de cercetare și inovare — parteneriate transnaționale în sănătate, digital, energie, mobilitate și climă.',
+    domains: ['Cercetare / inovare', 'Digitalizare'], beneficiaries: ['Universitate', 'IMM'], regions: ['Național'],
+    grantMin: 500000, grantMax: 10000000, cofinancing: 0,
+    deadline: '2025-09-15', launchDate: '2024-06-01',
+    who: 'Consorții internaționale (min. 3 parteneri din 3 state membre UE), universități, institute, companii.',
+    activities: 'Cercetare fundamentală și aplicată, demonstrare tehnologii, transfer cunoștințe.',
+    isUrgent: false, confidence: 93
+  },
+  {
+    id: 16, status: 'URMEAZĂ',
+    title: 'FSE+ — Inovare socială și economie socială (ONG-uri)',
+    source: 'fonduri-structurale.ro', sourceTier: 3,
+    official_url: 'https://fonduri-structurale.ro',
+    sourcePages: ['https://fonduri-structurale.ro'],
+    program: 'FSE+ / Incluziune socială', callCode: 'N/A — Calendar estimativ',
+    summary: 'Program estimat pentru sprijinirea ONG-urilor și întreprinderilor sociale cu proiecte de incluziune a grupurilor vulnerabile, inserție profesională și servicii sociale.',
+    domains: ['Incluziune socială'], beneficiaries: ['ONG'], regions: ['Național'],
+    grantMin: 50000, grantMax: 400000, cofinancing: 10,
+    deadline: 'Estimat T3 2026', launchDate: 'Estimat mai 2026',
+    who: 'ONG-uri, întreprinderi sociale, asociații acreditate în domeniu.',
+    activities: 'Formare profesională, consiliere, inserție, servicii sociale comunitare.',
+    isUrgent: false, confidence: 55
+  },
+  {
+    id: 17, status: 'ACTIV',
+    title: 'Sprijin IMM — Digitalizare și transformare digitală (PNRR C7)',
+    source: 'oportunitati-ue.gov.ro', sourceTier: 1,
+    official_url: 'https://oportunitati-ue.gov.ro',
+    sourcePages: ['https://oportunitati-ue.gov.ro'],
+    program: 'PNRR / Componenta 7', callCode: 'PNRR/2024/C7/I1',
+    summary: 'Finanțare nerambursabilă pentru IMM-uri care implementează soluții digitale, automatizare, cloud computing și securitate cibernetică.',
+    domains: ['Digitalizare'], beneficiaries: ['IMM', 'Startup'], regions: ['Național'],
+    grantMin: 30000, grantMax: 500000, cofinancing: 20,
+    deadline: '2026-06-30', launchDate: '2024-11-01',
+    who: 'IMM-uri și startup-uri cu activitate de cel puțin 1 an, înregistrate în România.',
+    activities: 'Software, licențe, echipamente IT, consultanță implementare soluții digitale.',
+    isUrgent: false, confidence: 91
+  },
+  {
+    id: 18, status: 'ACTIV',
+    title: 'Start-Up Nation România — Granturi afaceri noi',
+    source: 'startupcafe.ro', sourceTier: 3,
+    official_url: 'https://startupcafe.ro',
+    sourcePages: ['https://startupcafe.ro'],
+    program: 'Start-Up Nation 2024', callCode: 'SUN/2024',
+    summary: 'Program de finanțare pentru antreprenori la debut. Grant maxim 250.000 RON pentru echipamente, amenajare spații, stoc și marketing.',
+    domains: ['Antreprenoriat'], beneficiaries: ['Startup'], regions: ['Național'],
+    grantMin: 25000, grantMax: 250000, cofinancing: 0,
+    deadline: '2026-03-31', launchDate: '2025-01-15',
+    who: 'Persoane fără firmă activă anterioară sau firme cu activitate sub 2 ani.',
+    activities: 'Echipamente, dotări, stocuri, cheltuieli curente 12 luni, marketing digital.',
+    isUrgent: false, confidence: 70
+  },
+  {
+    id: 19, status: 'ÎNCHIS',
+    title: 'POR Vest — Clustere inovative regionale',
+    source: 'vest.ro', sourceTier: 1,
+    official_url: 'https://vest.ro',
+    sourcePages: ['https://vest.ro'],
+    program: 'PR Vest / Prioritatea 1', callCode: 'PRVEST/2023/C1',
+    summary: 'Apel finalizat pentru sprijinirea clusterelor de inovare și competitivitate din Regiunea Vest. Informativ pentru sesiunile viitoare.',
+    domains: ['Antreprenoriat'], beneficiaries: ['IMM'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 2000000, cofinancing: 20,
+    deadline: '2024-12-15', launchDate: '2024-05-01',
+    who: 'Clustere inovative, asociații de firme, parteneriate public-privat.',
+    activities: 'C&D comun, transfer tehnologic, internaționalizare, marketing cluster.',
+    isUrgent: false, confidence: 98
+  },
+];
+
+/* ── State ───────────────────────────────────────────────────────────────── */
+let filters = { status: ['ACTIV'], domain: [], beneficiary: [], region: [], source: [] };
+let grantMax = 50000000;
+let savedIds = new Set();
+let alerts = [];
+let currentSearch = '';
+let compareIds = new Set();
+let currentAdminTab = 'review';
+
+/* ── Init ────────────────────────────────────────────────────────────────── */
+function init() {
+  renderResults();
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+}
+
+/* ── View routing ────────────────────────────────────────────────────────── */
+function showView(view) {
+  ['search','saved','alerts','sources','admin'].forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.style.display = v === view ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-links a').forEach((a, i) => {
+    a.classList.toggle('active', ['search','saved','alerts','sources','admin'][i] === view);
+  });
+  if (view === 'saved') renderSaved();
+  if (view === 'alerts') renderAlerts();
+  if (view === 'sources') renderSources();
+  if (view === 'admin') renderAdmin();
+}
+
+function setSearch(q) {
+  document.getElementById('search-input').value = q;
+  doSearch();
+}
+
+function doSearch() {
+  currentSearch = document.getElementById('search-input').value.toLowerCase().trim();
+  renderResults();
+}
+
+/* ── Filters ─────────────────────────────────────────────────────────────── */
+function toggleChip(el, type) {
+  const val = el.dataset.val;
+  const idx = filters[type].indexOf(val);
+  if (idx > -1) { filters[type].splice(idx, 1); el.classList.remove('active'); }
+  else { filters[type].push(val); el.classList.add('active'); }
+  renderResults();
+}
+
+function resetFilters() {
+  filters = { status: [], domain: [], beneficiary: [], region: [], source: [] };
+  grantMax = 50000000;
+  document.getElementById('grant-filter').value = 50000000;
+  document.getElementById('grant-val-display').textContent = 'Orice';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  renderResults();
+}
+
+function updateGrantFilter(val) {
+  grantMax = parseInt(val);
+  const display = grantMax >= 50000000 ? 'Orice' :
+    grantMax >= 1000000 ? '€' + (grantMax/1000000).toFixed(1) + 'M' :
+    '€' + (grantMax/1000).toFixed(0) + 'K';
+  document.getElementById('grant-val-display').textContent = display;
+  renderResults();
+}
+
+function getFiltered() {
+  return OPPORTUNITIES.filter(o => {
+    if (filters.status.length && !filters.status.includes(o.status)) return false;
+    if (filters.domain.length && !filters.domain.some(d => o.domains.includes(d))) return false;
+    if (filters.beneficiary.length && !filters.beneficiary.some(b => o.beneficiaries.includes(b))) return false;
+    if (filters.region.length && !filters.region.some(r => o.regions.includes(r))) return false;
+    if (filters.source.length) {
+      const isOff = o.sourceTier === 1;
+      if (filters.source.includes('Oficială') && !isOff) return false;
+      if (filters.source.includes('Editorială') && isOff) return false;
+    }
+    if (grantMax < 50000000 && o.grantMax > grantMax) return false;
+    if (currentSearch) {
+      const hay = (o.title + o.summary + o.domains.join(' ') + o.beneficiaries.join(' ') + o.regions.join(' ') + o.program).toLowerCase();
+      if (!currentSearch.split(' ').filter(Boolean).every(w => hay.includes(w))) return false;
+    }
+    return true;
+  });
+}
+
+function getSorted(list) {
+  const sort = document.getElementById('sort-select').value;
+  const s = [...list];
+  if (sort === 'deadline') return s.sort((a,b) => (a.deadline||'9').localeCompare(b.deadline||'9'));
+  if (sort === 'grant_desc') return s.sort((a,b) => b.grantMax - a.grantMax);
+  if (sort === 'newest') return s.sort((a,b) => (b.launchDate||'').localeCompare(a.launchDate||''));
+  return s.sort((a,b) => (a.status==='ACTIV'?0:a.status==='URMEAZĂ'?1:2) - (b.status==='ACTIV'?0:b.status==='URMEAZĂ'?1:2));
+}
+
+/* ── Results rendering ───────────────────────────────────────────────────── */
+function renderResults() {
+  const filtered = getSorted(getFiltered());
+  document.getElementById('results-count').textContent = filtered.length;
+  const container = document.getElementById('results-list');
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><h3>Nicio oportunitate găsită</h3><p>Încearcă să modifici filtrele sau termenul de căutare.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(o => `
+    <div class="opp-card" onclick="openDetail(${o.id})">
+      <div class="opp-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span class="status-badge ${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}">${o.status}</span>
+            <span class="source-tier ${o.sourceTier===1?'tier1':''}">${o.sourceTier===1?'Tier 1 Oficial':'Editorial'}</span>
+            ${o.isUrgent ? '<span style="font-size:11px;background:#fff3e0;color:#c26a00;padding:3px 8px;border-radius:100px;font-weight:500;">⏰ Termen aproape</span>' : ''}
+            ${(o.confidence||100) < 75 ? '<span style="font-size:11px;background:var(--warn-light);color:var(--warn);padding:3px 8px;border-radius:100px;">! Necesită verificare</span>' : ''}
+          </div>
+          <div class="opp-title">${o.title}</div>
+        </div>
+        <button class="compare-check ${compareIds.has(o.id)?'checked':''}"
+          onclick="event.stopPropagation();toggleCompare(${o.id})"
+          title="Adaugă la comparare">✓</button>
+      </div>
+      <div class="opp-summary">${o.summary}</div>
+      <div class="opp-meta">
+        ${o.domains.map(d=>`<span class="meta-tag domain">${d}</span>`).join('')}
+        ${o.beneficiaries.map(b=>`<span class="meta-tag">${b}</span>`).join('')}
+        ${o.regions.map(r=>`<span class="meta-tag region">${r}</span>`).join('')}
+      </div>
+      <div class="opp-footer">
+        <div class="grant-info">
+          <div>
+            <div class="grant-val">€${o.grantMax.toLocaleString('ro-RO')}</div>
+            <div class="grant-label">grant maxim</div>
+          </div>
+          ${o.cofinancing > 0
+            ? `<div><div class="grant-val">${o.cofinancing}%</div><div class="grant-label">cofinanțare</div></div>`
+            : '<div><div class="grant-val" style="color:var(--accent)">100%</div><div class="grant-label">nerambursabil</div></div>'}
+        </div>
+        <div class="opp-actions">
+          <div class="deadline ${o.isUrgent?'urgent':''}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            ${o.deadline}
+          </div>
+          <button class="btn-save ${savedIds.has(o.id)?'saved':''}" onclick="event.stopPropagation();toggleSave(${o.id},this)">
+            ${savedIds.has(o.id)?'★':'☆'}
+          </button>
+          <button class="btn-detail" onclick="event.stopPropagation();openDetail(${o.id})">Detalii →</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleSave(id, btn) {
+  if (savedIds.has(id)) { savedIds.delete(id); btn.classList.remove('saved'); btn.textContent='☆'; showToast('Eliminat din salvate'); }
+  else { savedIds.add(id); btn.classList.add('saved'); btn.textContent='★'; showToast('Salvat cu succes!'); }
+}
+
+/* ── Compare ─────────────────────────────────────────────────────────────── */
+function toggleCompare(id) {
+  if (compareIds.has(id)) {
+    compareIds.delete(id);
+  } else {
+    if (compareIds.size >= 3) return showToast('Maxim 3 oportunități pentru comparare');
+    compareIds.add(id);
+  }
+  const bar = document.getElementById('compare-bar');
+  bar.style.display = compareIds.size > 0 ? 'flex' : 'none';
+  document.getElementById('compare-count').textContent = compareIds.size;
+  renderResults();
+}
+
+function clearCompare() {
+  compareIds.clear();
+  document.getElementById('compare-bar').style.display = 'none';
+  renderResults();
+}
+
+function openCompare() {
+  if (compareIds.size < 2) return showToast('Selectează cel puțin 2 oportunități');
+  const opps = [...compareIds].map(id => OPPORTUNITIES.find(o => o.id === id)).filter(Boolean);
+  const rows = [
+    ['Program', o => o.program],
+    ['Status', o => `<span class="status-badge ${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}" style="font-size:11px;">${o.status}</span>`],
+    ['Grant maxim', o => `<strong>€${o.grantMax.toLocaleString('ro-RO')}</strong>`],
+    ['Grant minim', o => `€${o.grantMin.toLocaleString('ro-RO')}`],
+    ['Cofinanțare', o => o.cofinancing === 0 ? '<span style="color:var(--accent);font-weight:500;">100% nerambursabil</span>' : `${o.cofinancing}%`],
+    ['Termen limită', o => `<span style="${o.isUrgent?'color:var(--accent2);font-weight:500;':''}">${o.deadline}</span>`],
+    ['Domenii', o => o.domains.join(', ')],
+    ['Beneficiari', o => o.beneficiaries.join(', ')],
+    ['Regiuni', o => o.regions.join(', ')],
+    ['Sursă', o => `${o.source} (Tier ${o.sourceTier})`],
+    ['Cod apel', o => `<code style="font-size:11px;background:var(--surface2);padding:2px 5px;border-radius:4px;">${o.callCode}</code>`],
+    ['Confidence', o => {
+      const c = o.confidence||100;
+      const col = c >= 85 ? 'var(--accent)' : c >= 70 ? 'var(--warn)' : 'var(--accent2)';
+      return `<span style="color:${col};font-weight:500;">${c}%</span>`;
+    }],
+  ];
+
+  document.getElementById('compare-content').innerHTML = `
+    <table style="width:100%;border-collapse:collapse;min-width:${opps.length * 200}px;">
+      <thead>
+        <tr style="background:var(--surface2);">
+          <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;width:140px;border-bottom:1px solid var(--border);">Criteriu</th>
+          ${opps.map(o => `<th style="padding:12px 16px;text-align:left;font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--border);">${o.title.length > 55 ? o.title.slice(0,55)+'…' : o.title}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(([ label, fn ], ri) => `
+          <tr style="background:${ri%2===0?'var(--surface)':'var(--surface2)'};">
+            <td style="padding:10px 16px;font-size:12px;color:var(--ink3);font-weight:500;border-bottom:1px solid var(--border2);white-space:nowrap;">${label}</td>
+            ${opps.map(o => `<td style="padding:10px 16px;font-size:13px;color:var(--ink);border-bottom:1px solid var(--border2);">${fn(o)}</td>`).join('')}
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="padding:1rem 1.5rem;display:flex;gap:8px;flex-wrap:wrap;">
+      ${opps.map(o => `<a href="${o.official_url}" target="_blank" class="source-link" style="font-size:12px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        ${o.source}
+      </a>`).join('')}
+    </div>
+  `;
+  document.getElementById('compare-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCompare(e) {
+  if (e && e.target !== document.getElementById('compare-overlay')) return;
+  document.getElementById('compare-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── Detail modal ────────────────────────────────────────────────────────── */
+function openDetail(id) {
+  const o = OPPORTUNITIES.find(x => x.id === id);
+  if (!o) return;
+  const c = o.confidence || 100;
+  const confColor = c >= 85 ? 'var(--accent)' : c >= 70 ? 'var(--warn)' : 'var(--accent2)';
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <span class="status-badge ${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}">${o.status}</span>
+        <span class="source-tier ${o.sourceTier===1?'tier1':''}" style="font-size:11px;">${o.source}</span>
+        <span style="font-size:11px;color:var(--ink3);">${o.callCode}</span>
+        <span style="font-size:11px;color:${confColor};font-weight:500;margin-left:auto;">Confidence: ${c}%</span>
+      </div>
+      <h2 style="font-family:var(--font-head);font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;line-height:1.3;margin-bottom:8px;">${o.title}</h2>
+      <div style="font-size:13px;color:var(--ink2);font-weight:300;">Program: <strong style="font-weight:500;color:var(--ink);">${o.program}</strong></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Rezumat</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.summary}</p>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-stat">
+          <div class="modal-stat-val">€${o.grantMax.toLocaleString('ro-RO')}</div>
+          <div class="modal-stat-label">Grant maxim</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val">${o.cofinancing === 0 ? '100% nerambursabil' : o.cofinancing + '%'}</div>
+          <div class="modal-stat-label">${o.cofinancing === 0 ? 'Finanțare' : 'Cofinanțare minimă'}</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val" style="${o.isUrgent?'color:var(--accent2)':''}">${o.deadline}</div>
+          <div class="modal-stat-label">Termen limită</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val">${o.launchDate}</div>
+          <div class="modal-stat-label">Data lansării</div>
+        </div>
+      </div>
+      <div class="modal-section" style="margin-top:1.25rem;">
+        <div class="modal-section-title">Cine poate aplica</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.who}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Activități eligibile</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.activities}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Domenii & beneficiari</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${o.domains.map(d=>`<span class="meta-tag domain">${d}</span>`).join('')}
+          ${o.beneficiaries.map(b=>`<span class="meta-tag">${b}</span>`).join('')}
+          ${o.regions.map(r=>`<span class="meta-tag region">${r}</span>`).join('')}
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Surse</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a class="source-link" href="${o.official_url}" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            ${o.source} (sursă principală)
+          </a>
+          ${(o.sourcePages||[]).filter(u=>u!==o.official_url).map(u=>`
+            <a class="source-link" href="${u}" target="_blank">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              ${new URL(u).hostname.replace('www.','')}
+            </a>`).join('')}
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠ Informațiile sunt extrase automat și pot fi incomplete. Verificați întotdeauna sursa oficială înainte de a depune o cerere de finanțare.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1.5rem;flex-wrap:wrap;">
+        <button onclick="toggleSaveModal(${o.id})" style="background:${savedIds.has(o.id)?'var(--accent)':'var(--surface2)'};color:${savedIds.has(o.id)?'white':'var(--ink)'};border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">
+          ${savedIds.has(o.id)?'★ Salvat':'☆ Salvează'}
+        </button>
+        <button onclick="toggleCompare(${o.id});closeModal();" style="background:var(--surface2);border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer;">
+          ${compareIds.has(o.id)?'✓ În comparare':'+ Compară'}
+        </button>
+        <button onclick="closeModal()" style="background:var(--surface2);border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer;">Închide</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function toggleSaveModal(id) {
+  if (savedIds.has(id)) { savedIds.delete(id); showToast('Eliminat din salvate'); }
+  else { savedIds.add(id); showToast('Salvat cu succes!'); }
+  closeModal(); renderResults();
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── Saved view ──────────────────────────────────────────────────────────── */
+function renderSaved() {
+  const container = document.getElementById('saved-list');
+  const saved = OPPORTUNITIES.filter(o => savedIds.has(o.id));
+  if (!saved.length) {
+    container.innerHTML = `<div class="empty-state"><h3>Nicio oportunitate salvată</h3><p>Apasă ☆ pe orice card pentru a salva.</p></div>`;
+    return;
+  }
+  container.innerHTML = saved.map(o => `
+    <div class="opp-card" onclick="openDetail(${o.id})">
+      <div class="opp-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+            <span class="status-badge ${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}">${o.status}</span>
+            <span class="source-tier ${o.sourceTier===1?'tier1':''}">${o.source}</span>
+          </div>
+          <div class="opp-title">${o.title}</div>
+        </div>
+      </div>
+      <div class="opp-summary">${o.summary}</div>
+      <div class="opp-footer">
+        <div class="grant-info">
+          <div><div class="grant-val">€${o.grantMax.toLocaleString('ro-RO')}</div><div class="grant-label">grant maxim</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="deadline">${o.deadline}</div>
+          <button class="btn-save saved" onclick="event.stopPropagation();savedIds.delete(${o.id});renderSaved();">★</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── Alerts view ─────────────────────────────────────────────────────────── */
+function saveAlert() {
+  const q = document.getElementById('alert-query').value.trim();
+  if (!q) return showToast('Introduceți un termen de căutare');
+  alerts.push({ query: q, created: new Date().toLocaleDateString('ro-RO'), active: true });
+  document.getElementById('alert-query').value = '';
+  renderAlerts();
+  showToast('Alertă creată: "' + q + '"');
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alerts-list');
+  if (!alerts.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:2rem;"><h3>Nicio alertă creată</h3><p>Adaugă o alertă pentru a fi notificat.</p></div>`;
+    return;
+  }
+  container.innerHTML = alerts.map((a, i) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="flex:1;">
+        <div style="font-weight:500;font-size:14px;margin-bottom:2px;">"${a.query}"</div>
+        <div style="font-size:12px;color:var(--ink3);">Creată: ${a.created}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:3px 8px;border-radius:100px;">Activă</span>
+        <button onclick="setSearch('${a.query}');showView('search');" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:3px 9px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Caută acum</button>
+        <button onclick="removeAlert(${i})" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:18px;line-height:1;">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeAlert(i) { alerts.splice(i, 1); renderAlerts(); showToast('Alertă eliminată'); }
+
+/* ── Sources view ────────────────────────────────────────────────────────── */
+function renderSources() {
+  const container = document.getElementById('sources-grid');
+  const srcList = Object.entries(SOURCES);
+  const okCount = srcList.filter(([,s])=>s.status==='ok').length;
+  const warnCount = srcList.filter(([,s])=>s.status==='warn').length;
+  const errCount = srcList.filter(([,s])=>s.status==='err').length;
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:2rem;">
+      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent);">${okCount}</div><div class="admin-stat-label">Surse OK</div></div>
+      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--warn);">${warnCount}</div><div class="admin-stat-label">Avertismente</div></div>
+      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent2);">${errCount}</div><div class="admin-stat-label">Erori</div></div>
+      <div class="admin-stat"><div class="admin-stat-val">${OPPORTUNITIES.length}</div><div class="admin-stat-label">Oportunități indexate</div></div>
+    </div>
+    ${srcList.map(([id, s]) => `
+      <div class="source-card">
+        <div class="source-indicator ${s.status}"></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+            <strong style="font-size:14px;">${s.name}</strong>
+            <span style="font-size:11px;background:${s.tier===1?'var(--accent-light)':'var(--surface2)'};color:${s.tier===1?'var(--accent)':'var(--ink3)'};padding:2px 7px;border-radius:100px;">Tier ${s.tier}</span>
+            <span style="font-size:11px;background:${s.status==='ok'?'var(--accent-light)':s.status==='warn'?'var(--warn-light)':'var(--accent2-light)'};color:${s.status==='ok'?'var(--accent)':s.status==='warn'?'var(--warn)':'var(--accent2)'};padding:2px 7px;border-radius:100px;">${s.status==='ok'?'Activ':s.status==='warn'?'Avertisment':'Eroare'}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink3);margin-bottom:6px;">${s.note}</div>
+          <div style="font-size:11px;color:var(--ink3);">Pagini monitorizate: ${s.pages.length} &nbsp;·&nbsp; Oportunități: ${s.opps}</div>
+          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
+            ${s.pages.map(p=>`<a href="${p}" target="_blank" style="font-size:11px;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;display:inline-block;">${p.replace('https://','')}</a>`).join('')}
+          </div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--ink3);white-space:nowrap;flex-shrink:0;">
+          <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:var(--ink);">${s.opps}</div>
+          <div>intrări</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+/* ── Admin view ──────────────────────────────────────────────────────────── */
+function renderAdmin() {
+  const active = OPPORTUNITIES.filter(o=>o.status==='ACTIV').length;
+  const lowConf = OPPORTUNITIES.filter(o=>(o.confidence||100)<80).length;
+  const editorial = OPPORTUNITIES.filter(o=>o.sourceTier===3).length;
+  const errors = Object.values(SOURCES).filter(s=>s.status==='err').length;
+
+  document.getElementById('admin-stats').innerHTML = `
+    <div class="admin-stat"><div class="admin-stat-val">${OPPORTUNITIES.length}</div><div class="admin-stat-label">Total oportunități</div></div>
+    <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent)">${active}</div><div class="admin-stat-label">Active</div></div>
+    <div class="admin-stat"><div class="admin-stat-val" style="color:var(--warn)">${lowConf}</div><div class="admin-stat-label">Confidence scăzut</div></div>
+    <div class="admin-stat"><div class="admin-stat-val" style="color:var(--ink3)">${editorial}</div><div class="admin-stat-label">Editoriale</div></div>
+    <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent2)">${errors}</div><div class="admin-stat-label">Surse cu erori</div></div>
+  `;
+  switchAdminTab(currentAdminTab);
+}
+
+function switchAdminTab(tab, btn) {
+  currentAdminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else document.querySelectorAll('.admin-tab').forEach((t,i) => {
+    if (['review','sources','new','dupes'][i]===tab) t.classList.add('active');
+  });
+
+  const c = document.getElementById('admin-content');
+
+  if (tab === 'review') {
+    const queue = OPPORTUNITIES.filter(o => (o.confidence||100) < 80 || o.sourceTier === 3);
+    c.innerHTML = queue.length ? queue.map(o => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+              <span class="status-badge ${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}" style="font-size:10px;">${o.status}</span>
+              <span style="font-size:11px;background:${(o.confidence||100)<75?'var(--warn-light)':'var(--surface2)'};color:${(o.confidence||100)<75?'var(--warn)':'var(--ink3)'};padding:2px 7px;border-radius:100px;">Confidence: ${o.confidence||100}%</span>
+              ${o.sourceTier===3?'<span style="font-size:11px;background:var(--surface2);color:var(--ink3);padding:2px 7px;border-radius:100px;">Sursă editorială</span>':''}
+            </div>
+            <div style="font-weight:500;font-size:14px;margin-bottom:4px;">${o.title}</div>
+            <div style="font-size:12px;color:var(--ink3);">${o.source} · ${o.callCode}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button onclick="openDetail(${o.id})" style="font-size:12px;background:var(--accent-light);color:var(--accent);border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Verifică</button>
+            <button onclick="showToast('Override aplicat pentru #${o.id}')" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Confirmă OK</button>
+          </div>
+        </div>
+      </div>
+    `).join('') : '<div class="empty-state" style="padding:2rem;"><h3>Review queue gol</h3><p>Toate oportunitățile au confidence ridicat.</p></div>';
+  }
+
+  if (tab === 'sources') {
+    c.innerHTML = Object.entries(SOURCES).map(([id, s]) => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+        <div class="source-indicator ${s.status}"></div>
+        <div style="flex:1;">
+          <strong style="font-size:14px;">${s.name}</strong>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px;">${s.note}</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:var(--ink3);">
+          <div style="font-weight:500;color:var(--ink);">${s.pages.length} pagini</div>
+          <div>${s.opps} intrări</div>
+        </div>
+        <button onclick="showToast('Re-crawl inițiat pentru ${s.name}')" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);flex-shrink:0;">Re-crawl</button>
+      </div>
+    `).join('');
+  }
+
+  if (tab === 'new') {
+    const recent = OPPORTUNITIES.filter(o => o.launchDate >= '2026-01-01').slice(0, 8);
+    c.innerHTML = recent.map(o => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="font-weight:500;font-size:14px;margin-bottom:2px;">${o.title}</div>
+          <div style="font-size:12px;color:var(--ink3);">${o.source} · Lansat: ${o.launchDate}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button onclick="openDetail(${o.id})" style="font-size:12px;background:var(--accent-light);color:var(--accent);border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Detalii</button>
+          <button onclick="showToast('Publicat în index: #${o.id}')" style="font-size:12px;background:var(--accent);color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Publică</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  if (tab === 'dupes') {
+    c.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;">
+        <div style="font-weight:500;margin-bottom:8px;font-size:14px;">Potențial duplicat detectat — similaritate 78%</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+          <div style="background:var(--surface2);border-radius:8px;padding:0.75rem;font-size:13px;">
+            <div style="font-weight:500;margin-bottom:4px;">ID #7 — ADR Vest IMM Valea Jiului</div>
+            <div style="color:var(--ink3);font-size:12px;">PTJ/IMM/VALEAJIULUI/2025 · adrvest.ro</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:8px;padding:0.75rem;font-size:13px;">
+            <div style="font-weight:500;margin-bottom:4px;">ID #6 — PTJ Mobilitate verde</div>
+            <div style="color:var(--ink3);font-size:12px;">PTJ/MOBILITATE-VERDE/2026 · mfe.gov.ro</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="showToast('Marcat ca distinct — nu duplicat')" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Nu sunt duplicate</button>
+          <button onclick="showToast('Contopite în intrare unică!')" style="font-size:12px;background:var(--accent);color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Contopește</button>
+        </div>
+      </div>
+      <div class="empty-state" style="padding:1.5rem;"><p style="font-size:13px;">1 duplicat suspect detectat. Restul oportunităților au fingerprint unic.</p></div>
+    `;
+  }
+}
+
+/* ── Shared utils ────────────────────────────────────────────────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeCompare();
+  }
+});
+
+init();
+</script>
+  'mfe.gov.ro': {
+    name: 'MFE / MIPE', tier: 1,
+    pages: [
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/',
+      'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/3/',
+      'https://mfe.gov.ro/pdd/',
+      'https://mfe.gov.ro/calendar-apeluri-de-finantare/',
+    ]
+  },
+  'adrvest.ro': { name: 'ADR Vest', tier: 1, pages: ['https://www.adrvest.ro','https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'] },
+  'adrnordest.ro': { name: 'ADR Nord-Est', tier: 1, pages: ['https://www.adrnordest.ro'] },
+  'oportunitati-ue.gov.ro': { name: 'Oportunități UE Gov', tier: 1, pages: ['https://oportunitati-ue.gov.ro'] },
+  'afir.ro': { name: 'AFIR', tier: 1, pages: ['https://afir.ro'] },
+  'commission.europa.eu': { name: 'Comisia Europeană', tier: 1, pages: ['https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro'] },
+  'vest.ro': { name: 'Vest.ro', tier: 1, pages: ['https://vest.ro'] },
+  'fonduri-structurale.ro': { name: 'Fonduri Structurale', tier: 3, pages: ['https://fonduri-structurale.ro'] },
+  'startupcafe.ro': { name: 'StartupCafe', tier: 3, pages: ['https://startupcafe.ro'] },
+};
+
+const OPPORTUNITIES = [
+  /* ── MFE / MIPE ────────────────────────────────────────────────────────── */
+  {
+    id: 1, status: 'ACTIV',
+    title: 'PoCIDIF — HUB Antreprenorial Național (creare/operaționalizare)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/'],
+    program: 'PoCIDIF', callCode: 'PoCIDIF/HUB-ANTREPRENORIAL',
+    summary: 'Finanțare pentru crearea sau operaționalizarea unui HUB antreprenorial național — sprijin pentru ecosistemul de inovare, accelerare startup și transfer de cunoștințe.',
+    domains: ['Antreprenoriat', 'Digitalizare'], beneficiaries: ['IMM', 'Universitate'], regions: ['Național'],
+    grantMin: 500000, grantMax: 5000000, cofinancing: 15,
+    deadline: '2026-06-30', launchDate: '2026-01-01',
+    who: 'Consorții formate din instituții publice, universități, IMM-uri inovative, acceleratoare.',
+    activities: 'Infrastructură fizică și digitală pentru hub, programe mentorat, accelerare, evenimente ecosistem.',
+    isUrgent: false
+  },
+  {
+    id: 2, status: 'ACTIV',
+    title: 'PNRR C16 REPowerEU — Granturi bonuri valorice energie regenerabilă (gospodării)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'PNRR / Componenta 16 REPowerEU / I4', callCode: 'OMIPE-6252/2024',
+    summary: 'Schema de granturi sub formă de bonuri valorice pentru gospodăriile care instalează sisteme de energie din surse regenerabile (panouri solare, pompe de căldură). Finanțare 50% grant, 50% împrumut PNRR.',
+    domains: ['Energie'], beneficiaries: ['IMM'], regions: ['Național'],
+    grantMin: 5000, grantMax: 30000, cofinancing: 0,
+    deadline: '2026-06-30', launchDate: '2025-06-01',
+    who: 'Gospodării individuale și mici consumatori care instalează sisteme fotovoltaice sau pompe de căldură.',
+    activities: 'Achiziție și instalare panouri fotovoltaice, baterii stocare, pompe de căldură din surse regenerabile.',
+    isUrgent: false
+  },
+  {
+    id: 3, status: 'ACTIV',
+    title: 'Programul pentru Dezvoltare Durabilă (PDD) — Conservarea speciilor și habitatelor',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/pdd/',
+    sourcePages: ['https://mfe.gov.ro/pdd/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/3/'],
+    program: 'PDD 2021-2027', callCode: 'PDD/HABITATE/2026',
+    summary: 'Ghid pentru proiecte dedicate menținerii și îmbunătățirii stării de conservare a speciilor și habitatelor prin măsuri de conservare activă și management ecologic.',
+    domains: ['Mediu'], beneficiaries: ['ONG', 'UAT', 'Universitate'], regions: ['Național'],
+    grantMin: 100000, grantMax: 3000000, cofinancing: 15,
+    deadline: '2026-09-30', launchDate: '2026-02-18',
+    who: 'ONG-uri de mediu, universități, institute de cercetare ecologică, UAT-uri cu arii protejate.',
+    activities: 'Măsuri de conservare habitate, monitoring biodiversitate, refacere ecosisteme, educație ecologică.',
+    isUrgent: false
+  },
+  {
+    id: 4, status: 'ACTIV',
+    title: 'Programul Sănătate — Infrastructură PNRR unități sanitare (actualizare ghid)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/actualizare-ghidul-solicitantului-pnrr-unitati-sanitare/',
+    sourcePages: ['https://mfe.gov.ro/actualizare-ghidul-solicitantului-pnrr-unitati-sanitare/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/'],
+    program: 'Programul Sănătate / PNRR', callCode: 'PS/UNITATI-SANITARE/PNRR',
+    summary: 'Finanțare pentru construcția, dotarea și modernizarea unităților sanitare publice, cu accent pe reducerea disparităților regionale în accesul la servicii medicale.',
+    domains: ['Sănătate'], beneficiaries: ['UAT', 'Universitate'], regions: ['Național'],
+    grantMin: 1000000, grantMax: 50000000, cofinancing: 0,
+    deadline: '2026-06-30', launchDate: '2025-01-01',
+    who: 'Spitale publice, autorități locale, ministere cu competențe în sănătate.',
+    activities: 'Construcție/reabilitare clădiri, achiziție echipamente medicale, digitalizare sisteme clinice.',
+    isUrgent: false
+  },
+  {
+    id: 5, status: 'ACTIV',
+    title: 'PoIDS — Servicii comunitare pentru copii și familii (ITI Moții, Țara de Piatră)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'PoIDS / Incluziune și Demnitate Socială', callCode: 'PoIDS/COPII-FAMILIE/ITI',
+    summary: 'Sprijin pentru servicii comunitare destinate copiilor și familiilor aflate în situații de risc, prevenirea separării și reintegrarea în familie a copiilor din sistemul de protecție specială.',
+    domains: ['Incluziune socială'], beneficiaries: ['ONG', 'UAT'], regions: ['Național'],
+    grantMin: 50000, grantMax: 500000, cofinancing: 10,
+    deadline: '2026-05-31', launchDate: '2025-11-01',
+    who: 'ONG-uri, autorități locale din teritoriul ITI Moții și Țara de Piatră.',
+    activities: 'Servicii de consiliere familială, centre de zi, programe reintegrare, asistență socială.',
+    isUrgent: false
+  },
+  {
+    id: 6, status: 'URMEAZĂ',
+    title: 'PTJ — Mobilitate verde și energie accesibilă (apeluri competitive + necompetitive)',
+    source: 'mfe.gov.ro', sourceTier: 1,
+    official_url: 'https://mfe.gov.ro/ptj/calendar-apeluri-de-proiecte/',
+    sourcePages: ['https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/', 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/page/2/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/MOBILITATE-VERDE/2026',
+    summary: 'Apeluri competitive și necompetitive pentru acțiunea "Energie verde accesibilă și mobilitate nepoluantă", Prioritățile 1-6, cu metodologii aprobate în feb. 2026.',
+    domains: ['Energie', 'Infrastructură'], beneficiaries: ['UAT', 'IMM'], regions: ['Național'],
+    grantMin: 200000, grantMax: 10000000, cofinancing: 20,
+    deadline: 'Estimat T3 2026', launchDate: '2026-03-01',
+    who: 'UAT-uri, companii din zone de tranziție justă, operatori transport public.',
+    activities: 'Transport electric, stații reîncărcare, producție energie verde locală, eficiență energetică mobilitate.',
+    isUrgent: false
+  },
+  /* ── ADR VEST ──────────────────────────────────────────────────────────── */
+  {
+    id: 7, status: 'ACTIV',
+    title: 'ADR Vest — Investiții IMM Valea Jiului (Programul Tranziție Justă)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă / PTJ IMM', callCode: 'PTJ/IMM/VALEAJIULUI/2025',
+    summary: 'Finanțare pentru investiții productive în IMM-uri din Valea Jiului (Petroșani, Vulcan etc.). Sprijin pentru diversificarea economică în zonele afectate de tranziția de la cărbune.',
+    domains: ['Antreprenoriat', 'Energie'], beneficiaries: ['IMM'], regions: ['Vest'],
+    grantMin: 50000, grantMax: 2000000, cofinancing: 30,
+    deadline: '2026-02-28', launchDate: '2025-11-01',
+    who: 'IMM-uri cu sediu/punct de lucru în zona de tranziție justă (Valea Jiului, Hunedoara).',
+    activities: 'Investiții în capacități productive, echipamente, tehnologii curate, locuri de muncă.',
+    isUrgent: true
+  },
+  {
+    id: 8, status: 'ACTIV',
+    title: 'ADR Vest — Parcuri industriale și tehnologice',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/parcuri-industriale-si-tehnologice/',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/PARCURI-IND/2026',
+    summary: 'Sprijin pentru crearea și dezvoltarea parcurilor industriale și tehnologice în Regiunea Vest, pentru atragerea de investiții și crearea de locuri de muncă în zone de tranziție.',
+    domains: ['Infrastructură', 'Antreprenoriat'], beneficiaries: ['UAT', 'IMM'], regions: ['Vest'],
+    grantMin: 1000000, grantMax: 20000000, cofinancing: 30,
+    deadline: '2026-07-28', launchDate: '2026-01-28',
+    who: 'Administrații publice locale, companii de administrare parcuri industriale din zona de tranziție.',
+    activities: 'Infrastructură utilități, drumuri interne, clădiri comune, digitalizare management parc.',
+    isUrgent: false
+  },
+  {
+    id: 9, status: 'ACTIV',
+    title: 'ADR Vest — Energie regenerabilă (Tranziție Justă)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/programul-tranzitie-justa_dezvoltarea-surselor-de-energie-regenerabila',
+    sourcePages: ['https://www.adrvest.ro', 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/'],
+    program: 'Programul Tranziție Justă 2021-2027', callCode: 'PTJ/ENERGIE-REG/2026',
+    summary: 'Finanțare pentru dezvoltarea surselor de energie regenerabilă în Regiunea Vest — eolian, solar, biomasă — ca parte a tranziției economice a zonelor dependente de combustibili fosili.',
+    domains: ['Energie'], beneficiaries: ['IMM', 'UAT'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 10000000, cofinancing: 25,
+    deadline: '2026-08-26', launchDate: '2026-02-25',
+    who: 'IMM-uri, UAT-uri, companii de energie din zona de tranziție justă a Regiunii Vest.',
+    activities: 'Instalare capacități SRE, stocare energie, racordare la rețea, eficiență energetică combinată.',
+    isUrgent: false
+  },
+  {
+    id: 10, status: 'ACTIV',
+    title: 'ADR Vest — Vest Ventures: Fond de accelerare startup (100.000 €/startup)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/vest-ventures-da-startul-primei-cohorte-noua-startup-uri-selectate-intra-intr-un-program-de-accelerare-cu-investitii-de-pana-la-100-000-euro/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest / Vest Ventures', callCode: 'PRV/VESTVENTURES/C1',
+    summary: 'Primul accelerator regional cu finanțare europeană a selectat 9 startup-uri. Investiții de până la 100.000 € per startup, plus mentorat intensiv, rețea de parteneri și acces la piață.',
+    domains: ['Antreprenoriat', 'Digitalizare'], beneficiaries: ['Startup'], regions: ['Vest'],
+    grantMin: 50000, grantMax: 100000, cofinancing: 0,
+    deadline: 'Cohortă 2 — estimat T3 2026', launchDate: '2026-04-06',
+    who: 'Startup-uri inovative din Regiunea Vest, în faza seed/early stage, cu produs demonstrabil.',
+    activities: 'Program accelerare 6 luni, investiție în capital, mentorat, acces la clienți pilot.',
+    isUrgent: false
+  },
+  {
+    id: 11, status: 'ACTIV',
+    title: 'ADR Vest — Finanțare 4M€ patrimoniu cultural UNESCO Vest',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/finantari-de-4-milioane-de-euro-pentru-protejarea-si-valorificarea-patrimoniului-unesco-din-regiunea-vest/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest 2021-2027', callCode: 'PRV/PATRIMONIU-UNESCO/2026',
+    summary: 'Fonduri europene pentru protejarea și valorificarea obiectivelor de patrimoniu cultural UNESCO din Regiunea Vest. Sprijin pentru restaurare, digitalizare și promovare turistică.',
+    domains: ['Cultură', 'Turism'], beneficiaries: ['UAT', 'ONG'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 4000000, cofinancing: 20,
+    deadline: '2026-07-31', launchDate: '2026-04-01',
+    who: 'Autorități locale, ONG-uri și instituții culturale care administrează obiective UNESCO.',
+    activities: 'Restaurare monumente, digitalizare patrimoniu, trasee turistice, promovare internațională.',
+    isUrgent: false
+  },
+  {
+    id: 12, status: 'ACTIV',
+    title: 'ADR Vest — Infrastructură Spital de Copii "Louis Țurcanu" Timișoara (~3M€)',
+    source: 'adrvest.ro', sourceTier: 1,
+    official_url: 'https://adrvest.ro/investitie-de-aproape-3-milioane-de-euro-in-spitalul-de-copii-louis-turcanu-din-timisoara-prin-programul-regional-vest/',
+    sourcePages: ['https://www.adrvest.ro'],
+    program: 'Programul Regional Vest 2021-2027', callCode: 'PRV/SANATATE/SPITAL-COPII',
+    summary: 'Investiție europeană de aproape 3 milioane € în dotarea și modernizarea Spitalului de Copii din Timișoara, principala unitate pediatrică a Regiunii Vest.',
+    domains: ['Sănătate'], beneficiaries: ['UAT'], regions: ['Vest'],
+    grantMin: 1000000, grantMax: 3000000, cofinancing: 15,
+    deadline: '2026-12-31', launchDate: '2026-04-08',
+    who: 'Unități spitalicești publice din Regiunea Vest finanțate prin Programul Regional Vest.',
+    activities: 'Dotare echipamente medicale, reabilitare secții, sisteme digitale de monitorizare.',
+    isUrgent: false
+  },
+  /* ── ADR NORD-EST ──────────────────────────────────────────────────────── */
+  {
+    id: 13, status: 'ACTIV',
+    title: 'ADR Nord-Est — Fonduri europene pentru Regiunea Nord-Est',
+    source: 'adrnordest.ro', sourceTier: 1,
+    official_url: 'https://www.adrnordest.ro',
+    sourcePages: ['https://www.adrnordest.ro'],
+    program: 'Programul Regional Nord-Est 2021-2027', callCode: 'PRN-E/2026',
+    summary: 'Portal oficial al ADR Nord-Est cu apeluri active pentru IMM-uri, UAT-uri și ONG-uri din județele Bacău, Botoșani, Iași, Neamț, Suceava și Vaslui.',
+    domains: ['Antreprenoriat', 'Infrastructură', 'Digitalizare'], beneficiaries: ['IMM', 'UAT', 'ONG'], regions: ['Nord-Est'],
+    grantMin: 50000, grantMax: 15000000, cofinancing: 20,
+    deadline: 'Multiple apeluri — vezi portal', launchDate: '2024-01-01',
+    who: 'IMM-uri, UAT-uri, ONG-uri și instituții publice din Regiunea Nord-Est.',
+    activities: 'Investiții productive, digitalizare, infrastructură locală, incluziune socială.',
+    isUrgent: false
+  },
+  /* ── Păstrate din versiunea inițială ──────────────────────────────────── */
+  {
+    id: 14, status: 'ACTIV',
+    title: 'PNDR — Investiții în exploatații agricole mici și medii',
+    source: 'afir.ro', sourceTier: 1, official_url: 'https://afir.ro',
+    sourcePages: ['https://afir.ro'],
+    program: 'PNDR 2023-2027 / SM 4.1', callCode: 'AFIR/2024/4.1/C1',
+    summary: 'Finanțare pentru modernizarea exploatațiilor agricole: achiziție utilaje, irigații, construcții ferme, procesare produse agricole, respectarea standardelor UE.',
+    domains: ['Agricultură'], beneficiaries: ['Fermier'], regions: ['Național'],
+    grantMin: 10000, grantMax: 300000, cofinancing: 50,
+    deadline: '2026-07-31', launchDate: '2024-12-01',
+    who: 'Fermierii activi cu exploatații între 12.000 și 250.000 SO, înregistrați în Registrul Unic de Identificare.',
+    activities: 'Achiziție tractoare și combine, sisteme de irigații, construcții adăposturi animale.',
+    isUrgent: false
+  },
+  {
+    id: 15, status: 'ACTIV',
+    title: 'Horizon Europe — Parteneriate cercetare și inovare 2024-2025',
+    source: 'commission.europa.eu', sourceTier: 1,
+    official_url: 'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro',
+    sourcePages: ['https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro'],
+    program: 'Horizon Europe 2024', callCode: 'HE/2024/RIA',
+    summary: 'Cel mai amplu program european de cercetare și inovare. Finanțare pentru parteneriate transnaționale în sănătate, digital, energie, mobilitate și climă.',
+    domains: ['Cercetare / inovare', 'Digitalizare'], beneficiaries: ['Universitate', 'IMM'], regions: ['Național'],
+    grantMin: 500000, grantMax: 10000000, cofinancing: 0,
+    deadline: '2025-09-15', launchDate: '2024-06-01',
+    who: 'Consorții internaționale (min. 3 parteneri din 3 state membre UE), universități, institute, companii.',
+    activities: 'Cercetare fundamentală și aplicată, demonstrare tehnologii, transfer cunoștințe.',
+    isUrgent: false
+  },
+  {
+    id: 16, status: 'URMEAZĂ',
+    title: 'Fondul pentru inovare socială — ONG-uri și economie socială',
+    source: 'fonduri-structurale.ro', sourceTier: 3,
+    official_url: 'https://fonduri-structurale.ro',
+    sourcePages: ['https://fonduri-structurale.ro'],
+    program: 'FSE+ / Incluziune socială', callCode: 'N/A — Calendar estimativ',
+    summary: 'Program estimat pentru sprijinirea ONG-urilor și întreprinderilor sociale cu proiecte de incluziune a grupurilor vulnerabile, inserție profesională și servicii sociale.',
+    domains: ['Incluziune socială'], beneficiaries: ['ONG'], regions: ['Național'],
+    grantMin: 50000, grantMax: 400000, cofinancing: 10,
+    deadline: 'Estimat T3 2026', launchDate: 'Estimat mai 2026',
+    who: 'ONG-uri, întreprinderi sociale, asociații acreditate în domeniu.',
+    activities: 'Formare profesională, consiliere, inserție, servicii sociale comunitare.',
+    isUrgent: false
+  },
+  {
+    id: 17, status: 'ACTIV',
+    title: 'Sprijin IMM — Digitalizare și transformare digitală (PNRR C7)',
+    source: 'oportunitati-ue.gov.ro', sourceTier: 1,
+    official_url: 'https://oportunitati-ue.gov.ro',
+    sourcePages: ['https://oportunitati-ue.gov.ro'],
+    program: 'PNRR / Componenta 7', callCode: 'PNRR/2024/C7/I1',
+    summary: 'Finanțare nerambursabilă pentru IMM-uri care doresc să implementeze soluții digitale, automatizare, cloud computing și securitate cibernetică în activitatea curentă.',
+    domains: ['Digitalizare'], beneficiaries: ['IMM', 'Startup'], regions: ['Național'],
+    grantMin: 30000, grantMax: 500000, cofinancing: 20,
+    deadline: '2026-06-30', launchDate: '2024-11-01',
+    who: 'IMM-uri și startup-uri cu activitate de cel puțin 1 an, înregistrate în România.',
+    activities: 'Software, licențe, echipamente IT, consultanță implementare soluții digitale.',
+    isUrgent: false
+  },
+  {
+    id: 18, status: 'ACTIV',
+    title: 'Start-Up Nation România — Granturi pentru afaceri noi',
+    source: 'startupcafe.ro', sourceTier: 3,
+    official_url: 'https://startupcafe.ro',
+    sourcePages: ['https://startupcafe.ro'],
+    program: 'Start-Up Nation 2024', callCode: 'SUN/2024',
+    summary: 'Program de finanțare pentru antreprenori la debut. Grant maxim 250.000 RON pentru echipamente, amenajare spații, stoc și marketing.',
+    domains: ['Antreprenoriat'], beneficiaries: ['Startup'], regions: ['Național'],
+    grantMin: 25000, grantMax: 250000, cofinancing: 0,
+    deadline: '2026-03-31', launchDate: '2025-01-15',
+    who: 'Persoane fără firmă activă anterioară sau firme cu activitate sub 2 ani.',
+    activities: 'Echipamente, dotări, stocuri, cheltuieli curente 12 luni, marketing digital.',
+    isUrgent: false
+  },
+  {
+    id: 19, status: 'ÎNCHIS',
+    title: 'POR Vest — Sprijin pentru clustere inovative regionale',
+    source: 'vest.ro', sourceTier: 1,
+    official_url: 'https://vest.ro',
+    sourcePages: ['https://vest.ro'],
+    program: 'PR Vest / Prioritatea 1', callCode: 'PRVEST/2023/C1',
+    summary: 'Apel finalizat pentru sprijinirea clusterelor de inovare și competitivitate din Regiunea Vest. Informativ pentru sesiunile viitoare.',
+    domains: ['Antreprenoriat'], beneficiaries: ['IMM'], regions: ['Vest'],
+    grantMin: 200000, grantMax: 2000000, cofinancing: 20,
+    deadline: '2024-12-15', launchDate: '2024-05-01',
+    who: 'Clustere inovative, asociații de firme, parteneriate public-privat.',
+    activities: 'C&D comun, transfer tehnologic, internaționalizare, marketing cluster.',
+    isUrgent: false
+  },
+];
+
+let filters = { status: ['ACTIV'], domain: [], beneficiary: [], region: [], source: [] };
+let savedIds = new Set();
+let alerts = [];
+let currentSearch = '';
+let compareIds = new Set();
+let adminStatuses = {}; // manual status overrides
+
+function init() {
+  renderResults();
+  updateChipCounts();
+  document.getElementById('search-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+}
+
+const ALL_VIEWS = ['search','saved','alerts','sources','admin'];
+
+function showView(view) {
+  ALL_VIEWS.forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.style.display = v === view ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('onclick') && a.getAttribute('onclick').includes(`'${view}'`)) a.classList.add('active');
+  });
+  if (view === 'saved') renderSaved();
+  if (view === 'alerts') renderAlerts();
+  if (view === 'sources') renderSources();
+  if (view === 'admin') renderAdmin();
+}
+
+function setSearch(q) {
+  document.getElementById('search-input').value = q;
+  doSearch();
+}
+
+function doSearch() {
+  currentSearch = document.getElementById('search-input').value.toLowerCase().trim();
+  renderResults();
+  updateChipCounts();
+}
+
+function toggleChip(el, type) {
+  const val = el.dataset.val;
+  const idx = filters[type].indexOf(val);
+  if (idx > -1) { filters[type].splice(idx, 1); el.classList.remove('active'); }
+  else { filters[type].push(val); el.classList.add('active'); }
+  renderResults();
+  updateChipCounts();
+}
+
+function resetFilters() {
+  filters = { status: [], domain: [], beneficiary: [], region: [], source: [] };
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  renderResults();
+  updateChipCounts();
+}
+
+// Count how many results would show if each chip were toggled
+function updateChipCounts() {
+  document.querySelectorAll('.chip[data-val]').forEach(chip => {
+    const type = chip.getAttribute('onclick').match(/'(\w+)'\)/)?.[1];
+    if (!type) return;
+    const val = chip.dataset.val;
+    const wasActive = filters[type].includes(val);
+    if (!wasActive) filters[type].push(val);
+    const count = getFiltered().length;
+    if (!wasActive) filters[type].pop();
+    let badge = chip.querySelector('.chip-count');
+    if (count > 0 && !wasActive) {
+      if (!badge) { badge = document.createElement('span'); badge.className='chip-count'; chip.appendChild(badge); }
+      badge.textContent = count;
+    } else if (badge) badge.remove();
+  });
+}
+
+function getEffectiveStatus(o) {
+  return adminStatuses[o.id] || o.status;
+}
+
+function getFiltered() {
+  return OPPORTUNITIES.filter(o => {
+    const status = getEffectiveStatus(o);
+    if (filters.status.length && !filters.status.includes(status)) return false;
+    if (filters.domain.length && !filters.domain.some(d => o.domains.includes(d))) return false;
+    if (filters.beneficiary.length && !filters.beneficiary.some(b => o.beneficiaries.includes(b))) return false;
+    if (filters.region.length && !filters.region.some(r => o.regions.includes(r))) return false;
+    if (filters.source.length) {
+      const isOff = o.sourceTier === 1;
+      if (filters.source.includes('Oficială') && !isOff) return false;
+      if (filters.source.includes('Editorială') && isOff) return false;
+    }
+    if (currentSearch) {
+      const hay = (o.title + o.summary + o.domains.join(' ') + o.beneficiaries.join(' ') + o.regions.join(' ') + o.program).toLowerCase();
+      if (!currentSearch.split(' ').filter(Boolean).every(w => hay.includes(w))) return false;
+    }
+    return true;
+  });
+}
+
+function getSorted(list) {
+  const sort = document.getElementById('sort-select').value;
+  const s = [...list];
+  if (sort === 'deadline') return s.sort((a,b) => (a.deadline||'Z').localeCompare(b.deadline||'Z'));
+  if (sort === 'grant_desc') return s.sort((a,b) => b.grantMax - a.grantMax);
+  if (sort === 'newest') return s.sort((a,b) => (b.launchDate||'').localeCompare(a.launchDate||''));
+  return s.sort((a,b) => {
+    const rank = x => getEffectiveStatus(x)==='ACTIV'?0:getEffectiveStatus(x)==='URMEAZĂ'?1:2;
+    return rank(a)-rank(b) || a.sourceTier-b.sourceTier;
+  });
+}
+
+function renderResults() {
+  const filtered = getSorted(getFiltered());
+  document.getElementById('results-count').textContent = filtered.length;
+  const container = document.getElementById('results-list');
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-state"><h3>Nicio oportunitate găsită</h3><p>Încearcă să modifici filtrele sau termenul de căutare.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(o => {
+    const status = getEffectiveStatus(o);
+    const inCompare = compareIds.has(o.id);
+    return `
+    <div class="opp-card" onclick="openDetail(${o.id})">
+      <div class="opp-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
+            <span class="status-badge ${status==='ACTIV'?'active':status==='URMEAZĂ'?'upcoming':'closed'}">${status}</span>
+            <span class="source-tier ${o.sourceTier===1?'tier1':''}">${o.sourceTier===1?'Tier 1 — Oficial':'Sursă editorială'}</span>
+            ${o.isUrgent ? '<span style="font-size:11px;background:#fff3e0;color:#c26a00;padding:3px 8px;border-radius:100px;font-weight:500;">Termen aproape!</span>' : ''}
+          </div>
+          <div class="opp-title">${o.title}</div>
+        </div>
+        <button class="compare-check ${inCompare?'checked':''}" title="Adaugă la comparare"
+          onclick="event.stopPropagation();toggleCompare(${o.id},this)">✓</button>
+      </div>
+      <div class="opp-summary">${o.summary}</div>
+      <div class="opp-meta">
+        ${o.domains.map(d=>`<span class="meta-tag domain">${d}</span>`).join('')}
+        ${o.beneficiaries.map(b=>`<span class="meta-tag">${b}</span>`).join('')}
+        ${o.regions.map(r=>`<span class="meta-tag region">${r}</span>`).join('')}
+        <span class="meta-tag" style="margin-left:auto;font-style:italic;color:var(--ink3);">${o.source}</span>
+      </div>
+      <div class="opp-footer">
+        <div class="grant-info">
+          <div>
+            <div class="grant-val">€${o.grantMax.toLocaleString('ro-RO')}</div>
+            <div class="grant-label">grant maxim</div>
+          </div>
+          ${o.cofinancing > 0 ? `<div>
+            <div class="grant-val">${o.cofinancing}%</div>
+            <div class="grant-label">cofinanțare</div>
+          </div>` : '<div><div class="grant-val" style="color:var(--accent)">100%</div><div class="grant-label">nerambursabil</div></div>'}
+        </div>
+        <div class="opp-actions">
+          <div class="deadline ${o.isUrgent?'urgent':''}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            ${o.deadline}
+          </div>
+          <button class="btn-save ${savedIds.has(o.id)?'saved':''}" onclick="event.stopPropagation();toggleSave(${o.id},this)">
+            ${savedIds.has(o.id)?'★':'☆'}
+          </button>
+          <button class="btn-detail" onclick="event.stopPropagation();openDetail(${o.id})">Detalii →</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSave(id, btn) {
+  if (savedIds.has(id)) { savedIds.delete(id); btn.classList.remove('saved'); btn.textContent='☆'; showToast('Eliminat din salvate'); }
+  else { savedIds.add(id); btn.classList.add('saved'); btn.textContent='★'; showToast('Salvat cu succes!'); }
+}
+
+/* ── COMPARE ─────────────────────────────────────────────────────────────── */
+function toggleCompare(id, btn) {
+  if (compareIds.has(id)) {
+    compareIds.delete(id);
+    btn.classList.remove('checked');
+  } else {
+    if (compareIds.size >= 3) { showToast('Maximum 3 oportunități pentru comparare'); return; }
+    compareIds.add(id);
+    btn.classList.add('checked');
+  }
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  const bar = document.getElementById('compare-bar');
+  const items = document.getElementById('compare-bar-items');
+  if (compareIds.size === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  items.innerHTML = [...compareIds].map(id => {
+    const o = OPPORTUNITIES.find(x=>x.id===id);
+    return `<span style="font-size:12px;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:6px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.title}</span>`;
+  }).join('');
+}
+
+function clearCompare() {
+  compareIds.clear();
+  updateCompareBar();
+  document.querySelectorAll('.compare-check').forEach(b=>b.classList.remove('checked'));
+}
+
+function openCompare() {
+  if (compareIds.size < 2) { showToast('Selectează cel puțin 2 oportunități'); return; }
+  const opps = [...compareIds].map(id => OPPORTUNITIES.find(x=>x.id===id));
+  const rows = [
+    { label: 'Status', fn: o => `<span class="status-badge ${getEffectiveStatus(o)==='ACTIV'?'active':getEffectiveStatus(o)==='URMEAZĂ'?'upcoming':'closed'}" style="font-size:11px;">${getEffectiveStatus(o)}</span>` },
+    { label: 'Sursă', fn: o => `<span class="source-tier ${o.sourceTier===1?'tier1':''}" style="font-size:11px;">${o.source}</span>` },
+    { label: 'Program', fn: o => `<span style="font-size:13px;">${o.program}</span>` },
+    { label: 'Grant maxim', fn: o => `<strong style="font-family:var(--font-head);font-size:1.1rem;">€${o.grantMax.toLocaleString('ro-RO')}</strong>` },
+    { label: 'Grant minim', fn: o => `€${o.grantMin.toLocaleString('ro-RO')}` },
+    { label: 'Cofinanțare', fn: o => o.cofinancing === 0 ? '<span style="color:var(--accent);font-weight:500;">0% (nerambursabil)</span>' : `${o.cofinancing}%` },
+    { label: 'Termen limită', fn: o => `<span style="${o.isUrgent?'color:var(--accent2);font-weight:500;':''}">${o.deadline}</span>` },
+    { label: 'Beneficiari', fn: o => o.beneficiaries.join(', ') },
+    { label: 'Domenii', fn: o => o.domains.map(d=>`<span class="meta-tag domain">${d}</span>`).join(' ') },
+    { label: 'Regiuni', fn: o => o.regions.map(r=>`<span class="meta-tag region">${r}</span>`).join(' ') },
+    { label: 'Cine poate aplica', fn: o => `<span style="font-size:12px;color:var(--ink2);">${o.who}</span>` },
+  ];
+
+  const colW = `${Math.floor(80/opps.length)}%`;
+  const body = document.getElementById('compare-body');
+  body.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;min-width:500px;">
+      <thead>
+        <tr>
+          <th style="width:20%;text-align:left;padding:10px 14px;font-size:11px;color:var(--ink3);font-weight:500;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);">Criteriu</th>
+          ${opps.map(o=>`<th style="width:${colW};text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);">
+            <div style="font-family:var(--font-head);font-size:13px;font-weight:700;line-height:1.3;">${o.title}</div>
+          </th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((row,i)=>`
+          <tr style="background:${i%2===0?'transparent':'var(--surface2)'};">
+            <td style="padding:10px 14px;font-size:12px;color:var(--ink3);font-weight:500;vertical-align:top;border-bottom:1px solid var(--border2);">${row.label}</td>
+            ${opps.map(o=>`<td style="padding:10px 14px;vertical-align:top;border-bottom:1px solid var(--border2);">${row.fn(o)}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:1.5rem;display:flex;gap:8px;">
+      ${opps.map(o=>`<a href="${o.official_url}" target="_blank" class="source-link" style="font-size:12px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        ${o.source}
+      </a>`).join('')}
+    </div>`;
+  document.getElementById('compare-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCompare(e) {
+  if (e && e.target !== document.getElementById('compare-overlay')) return;
+  document.getElementById('compare-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── DETAIL MODAL ───────────────────────────────────────────────────────── */
+function openDetail(id) {
+  const o = OPPORTUNITIES.find(x => x.id === id);
+  if (!o) return;
+  const status = getEffectiveStatus(o);
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <span class="status-badge ${status==='ACTIV'?'active':status==='URMEAZĂ'?'upcoming':'closed'}">${status}</span>
+        <span class="source-tier ${o.sourceTier===1?'tier1':''}" style="font-size:11px;">${o.source}</span>
+        <span style="font-size:11px;color:var(--ink3);">${o.callCode}</span>
+      </div>
+      <h2 style="font-family:var(--font-head);font-size:1.2rem;font-weight:800;letter-spacing:-0.3px;line-height:1.3;margin-bottom:8px;">${o.title}</h2>
+      <div style="font-size:13px;color:var(--ink2);font-weight:300;">Program: <strong style="font-weight:500;color:var(--ink);">${o.program}</strong></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">Rezumat</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.summary}</p>
+      </div>
+      <div class="modal-grid">
+        <div class="modal-stat">
+          <div class="modal-stat-val">€${o.grantMax.toLocaleString('ro-RO')}</div>
+          <div class="modal-stat-label">Grant maxim</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val">${o.cofinancing === 0 ? '—' : o.cofinancing + '%'}</div>
+          <div class="modal-stat-label">${o.cofinancing === 0 ? '100% nerambursabil' : 'Cofinanțare minimă'}</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val" style="${o.isUrgent?'color:var(--accent2)':''}">${o.deadline}</div>
+          <div class="modal-stat-label">Termen limită</div>
+        </div>
+        <div class="modal-stat">
+          <div class="modal-stat-val">${o.launchDate}</div>
+          <div class="modal-stat-label">Data lansării</div>
+        </div>
+      </div>
+      <div class="modal-section" style="margin-top:1.25rem;">
+        <div class="modal-section-title">Cine poate aplica</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.who}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Activități eligibile</div>
+        <p style="font-size:14px;color:var(--ink2);line-height:1.6;font-weight:300;">${o.activities}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Domenii & beneficiari</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${o.domains.map(d=>`<span class="meta-tag domain">${d}</span>`).join('')}
+          ${o.beneficiaries.map(b=>`<span class="meta-tag">${b}</span>`).join('')}
+          ${o.regions.map(r=>`<span class="meta-tag region">${r}</span>`).join('')}
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Surse indexate</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a class="source-link" href="${o.official_url}" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            ${o.source} (principal)
+          </a>
+          ${(o.sourcePages||[]).filter(u=>u!==o.official_url).map(u=>`
+          <a class="source-link" href="${u}" target="_blank">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            ${new URL(u).hostname.replace('www.','')}
+          </a>`).join('')}
+        </div>
+      </div>
+      <div class="disclaimer">
+        ⚠ Informațiile afișate sunt extrase automat și pot fi incomplete. Verificați întotdeauna sursa oficială înainte de depunerea cererii de finanțare.
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1.5rem;flex-wrap:wrap;">
+        <button onclick="toggleSaveModal(${o.id})" style="background:${savedIds.has(o.id)?'var(--accent)':'var(--surface2)'};color:${savedIds.has(o.id)?'white':'var(--ink)'};border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">
+          ${savedIds.has(o.id)?'★ Salvat':'☆ Salvează'}
+        </button>
+        <button onclick="toggleCompare(${o.id},null);closeModal();updateCompareBar();" style="background:var(--surface2);border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer;">
+          ${compareIds.has(o.id)?'✓ În comparare':'+ Compară'}
+        </button>
+        <button onclick="closeModal()" style="background:var(--surface2);border:1px solid var(--border);padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer;">Închide</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function toggleSaveModal(id) {
+  if (savedIds.has(id)) { savedIds.delete(id); showToast('Eliminat din salvate'); }
+  else { savedIds.add(id); showToast('Salvat cu succes!'); }
+  closeModal();
+  renderResults();
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── SAVED VIEW ─────────────────────────────────────────────────────────── */
+function renderSaved() {
+  const container = document.getElementById('saved-list');
+  const saved = OPPORTUNITIES.filter(o => savedIds.has(o.id));
+  if (!saved.length) {
+    container.innerHTML = `<div class="empty-state"><h3>Nicio oportunitate salvată</h3><p>Apasă ☆ pe orice oportunitate pentru a o salva.</p></div>`;
+    return;
+  }
+  container.innerHTML = saved.map(o => {
+    const status = getEffectiveStatus(o);
+    return `
+    <div class="opp-card" onclick="openDetail(${o.id})">
+      <div class="opp-card-top">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+            <span class="status-badge ${status==='ACTIV'?'active':status==='URMEAZĂ'?'upcoming':'closed'}">${status}</span>
+            <span class="source-tier ${o.sourceTier===1?'tier1':''}" style="font-size:11px;">${o.source}</span>
+          </div>
+          <div class="opp-title">${o.title}</div>
+        </div>
+      </div>
+      <div class="opp-summary">${o.summary}</div>
+      <div class="opp-footer">
+        <div class="grant-info">
+          <div><div class="grant-val">€${o.grantMax.toLocaleString('ro-RO')}</div><div class="grant-label">grant maxim</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="deadline">${o.deadline}</div>
+          <button class="btn-save saved" onclick="event.stopPropagation();savedIds.delete(${o.id});renderSaved();">★</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── ALERTS VIEW ─────────────────────────────────────────────────────────── */
+function saveAlert() {
+  const q = document.getElementById('alert-query').value.trim();
+  if (!q) return showToast('Introduceți un termen de căutare');
+  const matchCount = OPPORTUNITIES.filter(o => {
+    const hay = (o.title+o.summary+o.domains.join(' ')).toLowerCase();
+    return q.toLowerCase().split(' ').every(w=>hay.includes(w));
+  }).length;
+  alerts.push({ query: q, created: new Date().toLocaleDateString('ro-RO'), matches: matchCount });
+  document.getElementById('alert-query').value = '';
+  renderAlerts();
+  showToast(`Alertă creată: "${q}" — ${matchCount} rezultate curente`);
+}
+
+function renderAlerts() {
+  const container = document.getElementById('alerts-list');
+  if (!alerts.length) {
+    container.innerHTML = `<div class="empty-state" style="padding:2rem;"><h3>Nicio alertă creată</h3><p>Adaugă o alertă pentru a fi notificat când apar oportunități noi.</p></div>`;
+    return;
+  }
+  container.innerHTML = alerts.map((a,i) => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+      <div>
+        <div style="font-weight:500;font-size:14px;margin-bottom:3px;">"${a.query}"</div>
+        <div style="font-size:12px;color:var(--ink3);">Creată: ${a.created} &nbsp;·&nbsp; ${a.matches} rezultate curente</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <button onclick="setSearch('${a.query}');showView('search');" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Caută acum</button>
+        <span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:3px 8px;border-radius:100px;">Activă</span>
+        <button onclick="removeAlert(${i})" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:18px;line-height:1;">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeAlert(i) { alerts.splice(i,1); renderAlerts(); showToast('Alertă eliminată'); }
+
+/* ── SOURCES VIEW ───────────────────────────────────────────────────────── */
+const SOURCE_META = {
+  'mfe.gov.ro':            { name:'MFE / MIPE', tier:1, status:'ok', desc:'Ministerul Fondurilor Europene — portal principal apeluri naționale și PNRR', crawlable:true },
+  'adrvest.ro':            { name:'ADR Vest', tier:1, status:'ok', desc:'Agenția pentru Dezvoltare Regională Vest — apeluri Tranziție Justă, PR Vest', crawlable:true },
+  'adrnordest.ro':         { name:'ADR Nord-Est', tier:1, status:'warn', desc:'ADR Nord-Est — portal regional (returnează 403 la crawling automat, necesită Playwright)', crawlable:false },
+  'oportunitati-ue.gov.ro':{ name:'Oportunități UE Gov', tier:1, status:'ok', desc:'Platformă guvernamentală integrată pentru oportunități europene și naționale', crawlable:true },
+  'afir.ro':               { name:'AFIR', tier:1, status:'ok', desc:'Agenția pentru Finanțarea Investițiilor Rurale — PNDR, fonduri agricole', crawlable:true },
+  'commission.europa.eu':  { name:'Comisia Europeană', tier:1, status:'ok', desc:'Portalul Funding & Tenders al Comisiei Europene — Horizon, LIFE, ERASMUS+', crawlable:true },
+  'vest.ro':               { name:'Vest.ro', tier:1, status:'ok', desc:'Portal regional Vest — noutăți și apeluri din Programul Regional Vest', crawlable:true },
+  'fonduri-structurale.ro':{ name:'Fonduri Structurale', tier:3, status:'ok', desc:'Agregator editorial specializat în fonduri europene pentru România', crawlable:true },
+  'startupcafe.ro':        { name:'StartupCafe', tier:3, status:'ok', desc:'Portal media antreprenoriat — acoperire programe granturi startup și IMM', crawlable:true },
+};
+
+function renderSources() {
+  const grid = document.getElementById('sources-grid');
+  const srcIds = Object.keys(SOURCE_META);
+  const sourceOpps = id => OPPORTUNITIES.filter(o=>o.source===id);
+
+  grid.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px;">
+      ${srcIds.map(id => {
+        const s = SOURCE_META[id];
+        const opps = sourceOpps(id);
+        const active = opps.filter(o=>getEffectiveStatus(o)==='ACTIV').length;
+        const pages = (SOURCES[id]?.pages || []);
+        return `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;flex-direction:column;gap:12px;">
+          <div class="source-card" style="display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;">
+            <div class="source-indicator ${s.status}" style="margin-top:5px;"></div>
+            <div>
+              <div style="font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:2px;">${s.name}</div>
+              <div style="font-size:11px;color:var(--ink3);">${id}</div>
+            </div>
+            <span style="font-size:10px;padding:3px 8px;border-radius:100px;${s.tier===1?'background:var(--accent-light);color:var(--accent);':'background:var(--surface2);color:var(--ink3);'}">Tier ${s.tier}</span>
+          </div>
+          <p style="font-size:13px;color:var(--ink2);line-height:1.5;font-weight:300;">${s.desc}</p>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:var(--ink3);">${opps.length} oportunități indexate</span>
+            ${active>0?`<span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:2px 8px;border-radius:100px;">${active} active</span>`:''}
+            ${s.crawlable?'<span style="font-size:11px;color:var(--accent);">✓ Crawlabil</span>':'<span style="font-size:11px;color:var(--warn);">⚠ Necesită Playwright</span>'}
+          </div>
+          ${pages.length ? `<div>
+            <div style="font-size:11px;color:var(--ink3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Pagini indexate (${pages.length})</div>
+            ${pages.map(u=>`<a href="${u}" target="_blank" style="display:block;font-size:11px;color:var(--accent);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u}</a>`).join('')}
+          </div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div style="margin-top:2rem;background:var(--warn-light);border:1px solid rgba(194,137,0,.2);border-radius:var(--radius);padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:500;color:var(--warn);margin-bottom:4px;">Notă despre crawling</div>
+      <p style="font-size:13px;color:var(--ink2);line-height:1.55;font-weight:300;">
+        Sursele marcate "Necesită Playwright" (ex: ADR Nord-Est) returnează erori 403 la crawling simplu HTTP.
+        În producție, folosiți <strong>Playwright</strong> cu un user-agent real și respectați fișierul <code>robots.txt</code>.
+        Toate sursele respectă politica de crawling și afișează sursa originală cu link direct.
+      </p>
+    </div>`;
+}
+
+/* ── ADMIN VIEW ─────────────────────────────────────────────────────────── */
+function renderAdmin() {
+  const total = OPPORTUNITIES.length;
+  const active = OPPORTUNITIES.filter(o=>getEffectiveStatus(o)==='ACTIV').length;
+  const needsReview = OPPORTUNITIES.filter(o=>o.sourceTier>1 || !o.deadline || o.deadline.startsWith('Estimat')).length;
+  const sources = Object.keys(SOURCE_META).length;
+  document.getElementById('adm-total').textContent = total;
+  document.getElementById('adm-active').textContent = active;
+  document.getElementById('adm-review').textContent = needsReview;
+  document.getElementById('adm-sources').textContent = sources;
+
+  // review queue
+  const reviewQ = OPPORTUNITIES.filter(o=>o.sourceTier>1||!o.deadline||o.deadline.startsWith('Estimat'));
+  const reviewList = document.getElementById('review-queue-list');
+  if (!reviewQ.length) {
+    reviewList.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--ink3);font-size:13px;">Nicio oportunitate necesită review.</div>`;
+  } else {
+    reviewList.innerHTML = reviewQ.map(o=>`
+      <div style="padding:.85rem 1.25rem;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.title}</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px;">${o.source} · ${o.deadline.startsWith('Estimat')?'Termen estimat':'Sursă editorială neconfirmată'}</div>
+        </div>
+        <span class="status-badge ${getEffectiveStatus(o)==='ACTIV'?'active':getEffectiveStatus(o)==='URMEAZĂ'?'upcoming':'closed'}" style="font-size:10px;flex-shrink:0;">${getEffectiveStatus(o)}</span>
+        <button onclick="openDetail(${o.id})" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);flex-shrink:0;">Verifică</button>
+      </div>
+    `).join('');
+  }
+
+  renderAdminTable();
+}
+
+function renderAdminTable() {
+  const q = (document.getElementById('adm-search')?.value||'').toLowerCase();
+  const opps = OPPORTUNITIES.filter(o => !q || o.title.toLowerCase().includes(q) || o.source.includes(q));
+  const tbody = document.getElementById('adm-tbody');
+  tbody.innerHTML = opps.map(o => {
+    const status = getEffectiveStatus(o);
+    return `
+    <tr style="border-bottom:1px solid var(--border2);" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <td style="padding:10px 14px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;cursor:pointer;" onclick="openDetail(${o.id})">${o.title}</td>
+      <td style="padding:10px 14px;">
+        <select onchange="setAdminStatus(${o.id},this.value)" style="font-family:var(--font-body);font-size:11px;border:1px solid var(--border);border-radius:5px;padding:3px 6px;background:var(--surface);color:var(--ink);outline:none;cursor:pointer;">
+          ${['ACTIV','URMEAZĂ','ÎNCHIS','DRAFT'].map(s=>`<option value="${s}" ${status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:10px 14px;font-size:12px;color:var(--ink2);">
+        <span class="source-tier ${o.sourceTier===1?'tier1':''}" style="font-size:10px;">${o.source}</span>
+      </td>
+      <td style="padding:10px 14px;font-size:12px;color:${o.isUrgent?'var(--accent2)':'var(--ink2)'};">${o.deadline}</td>
+      <td style="padding:10px 14px;">
+        <div style="display:flex;gap:6px;">
+          <button onclick="openDetail(${o.id})" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:3px 8px;border-radius:5px;cursor:pointer;font-family:var(--font-body);">Detalii</button>
+          <button onclick="toggleSaveAdmin(${o.id},this)" style="font-size:11px;background:${savedIds.has(o.id)?'var(--accent-light)':'var(--surface2)'};border:1px solid var(--border);padding:3px 8px;border-radius:5px;cursor:pointer;font-family:var(--font-body);color:${savedIds.has(o.id)?'var(--accent)':'var(--ink2)'};">${savedIds.has(o.id)?'★':'☆'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function setAdminStatus(id, status) {
+  adminStatuses[id] = status;
+  showToast(`Status actualizat: ${status}`);
+  renderResults();
+}
+
+function toggleSaveAdmin(id, btn) {
+  if (savedIds.has(id)) { savedIds.delete(id); btn.textContent='☆'; btn.style.background='var(--surface2)'; btn.style.color='var(--ink2)'; }
+  else { savedIds.add(id); btn.textContent='★'; btn.style.background='var(--accent-light)'; btn.style.color='var(--accent)'; }
+  showToast(savedIds.has(id)?'Salvat':'Eliminat din salvate');
+}
+
+/* ── UTILITIES ──────────────────────────────────────────────────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal();
+    closeCompare();
+  }
+});
+
+init();
+</script>
+</body>
 </html>
