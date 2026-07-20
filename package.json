@@ -1,15 +1,1 @@
-{
-  "name": "finmatch-romania",
-  "version": "0.1.0",
-  "description": "Motor inteligent de căutare pentru programe de finanțare din România și UE",
-  "private": true,
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "deploy:staging": "wrangler deploy --env staging",
-    "tail": "wrangler tail"
-  },
-  "devDependencies": {
-    "wrangler": "^3.0.0"
-  }
-}
+{"name":"finmatch","version":"2.3.0","private":true,"devDependencies":{"wrangler":"^3"}}
