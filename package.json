@@ -1,1 +1,11 @@
-{"name":"finmatch","version":"2.3.0","private":true,"devDependencies":{"wrangler":"^3"}}
+{
+  "name": "finmatch",
+  "version": "2.3.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3"
+  }
+}
