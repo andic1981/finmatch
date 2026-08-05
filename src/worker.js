@@ -9,36 +9,39 @@ const HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FinMatch România — Motor de căutare finanțări</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f7f6f1;
+  --bg: #f4f9f8;
   --surface: #ffffff;
-  --surface2: #f0ede5;
-  --ink: #191711;
-  --ink2: #565349;
-  --ink3: #9b9689;
-  --accent: #1a5c38;
-  --accent-light: #e6f2ec;
-  --accent2: #c8500d;
-  --accent2-light: #fdefe6;
-  --warn: #a97a00;
-  --warn-light: #fcf5e1;
-  --border: rgba(25,23,17,0.11);
-  --border2: rgba(25,23,17,0.055);
-  --radius: 8px;
-  --radius-lg: 14px;
-  --font-head: 'Syne', sans-serif;
+  --surface2: #ecf4f3;
+  --ink: #1f2a28;
+  --ink2: #5a6764;
+  --ink3: #9aa8a4;
+  --accent: #17a06a;
+  --accent-light: #dcf5ea;
+  --accent-dark: #0f7d51;
+  --sky: #2ea6d8;
+  --sky-light: #e0f2fb;
+  --accent2: #2ea6d8;
+  --accent2-light: #e0f2fb;
+  --warn: #e0952e;
+  --warn-light: #fdf3e2;
+  --border: rgba(31,42,40,0.10);
+  --border2: rgba(31,42,40,0.05);
+  --radius: 14px;
+  --radius-lg: 22px;
+  --font-head: 'Space Grotesk', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --shadow: 0 2px 4px rgba(25,23,17,0.05), 0 10px 28px rgba(25,23,17,0.07);
-  --shadow-sm: 0 1px 2px rgba(25,23,17,0.05), 0 2px 8px rgba(25,23,17,0.04);
+  --shadow: 0 3px 8px rgba(23,120,90,0.06), 0 16px 40px rgba(23,120,90,0.10);
+  --shadow-sm: 0 1px 3px rgba(23,120,90,0.05), 0 4px 12px rgba(23,120,90,0.06);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: var(--font-body);
-  background: var(--bg);
+  background: linear-gradient(180deg, #eef7f9 0%, var(--bg) 340px, var(--bg) 100%);
   color: var(--ink);
   font-size: 14px;
   line-height: 1.6;
@@ -67,7 +70,7 @@ nav {
 
 .logo {
   font-family: var(--font-head);
-  font-weight: 800;
+  font-weight: 700;
   font-size: 17px;
   letter-spacing: -0.4px;
   display: flex;
@@ -79,7 +82,7 @@ nav {
 
 .logo-dot {
   width: 22px; height: 22px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 100%);
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
@@ -123,7 +126,7 @@ nav {
   font-weight: 500 !important;
   margin-left: 6px;
 }
-.nav-cta:hover { background: #134a2c !important; }
+.nav-cta:hover { background: var(--accent-dark) !important; }
 
 /* ── HERO ── */
 .hero {
@@ -150,13 +153,13 @@ nav {
 
 .hero h1 {
   font-family: var(--font-head);
-  font-size: clamp(2.4rem, 5.5vw, 3.7rem);
-  font-weight: 800;
+  font-size: clamp(1.9rem, 4.2vw, 2.9rem);
+  font-weight: 700;
   line-height: 1.07;
-  letter-spacing: -2px;
+  letter-spacing: -1px;
   margin-bottom: 1.25rem;
 }
-.hero h1 em { font-style: normal; color: var(--accent); }
+.hero h1 em { font-style: normal; color: var(--accent); background: linear-gradient(120deg, transparent 60%, var(--sky-light) 60%); padding: 0 2px; }
 
 .hero > p {
   font-size: 16px;
@@ -208,7 +211,7 @@ nav {
 .search-btn {
   margin: 5px;
   padding: 9px 22px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: #fff;
   border: none;
   border-radius: 13px;
@@ -218,7 +221,7 @@ nav {
   white-space: nowrap;
   transition: background 0.15s;
 }
-.search-btn:hover { background: #134a2c; }
+.search-btn:hover { background: var(--accent-dark); }
 
 .quick-searches {
   display: flex;
@@ -265,7 +268,7 @@ nav {
 
 .stat-num {
   font-family: var(--font-head);
-  font-size: 1.45rem;
+  font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: -0.5px;
   line-height: 1;
@@ -481,7 +484,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
 .opp-title {
   font-family: var(--font-head);
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
   flex: 1;
@@ -533,7 +536,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   background: var(--surface2);
   color: var(--ink2);
 }
-.meta-tag.domain { background: #eaf0fd; color: #3a55b0; }
+.meta-tag.domain { background: var(--sky-light); color: #1c6f95; }
 .meta-tag.region { background: var(--accent-light); color: var(--accent); }
 
 .opp-footer {
@@ -606,7 +609,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   transition: background 0.12s;
   white-space: nowrap;
 }
-.btn-detail:hover { background: #d5ecdf; }
+.btn-detail:hover { background: #c9efdd; }
 
 /* ── MODAL ── */
 .modal-overlay {
@@ -690,7 +693,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
 .modal-stat-val {
   font-family: var(--font-head);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.2px;
 }
@@ -711,7 +714,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   margin-bottom: 6px;
   transition: background 0.1s;
 }
-.source-link:hover { background: #d5ecdf; }
+.source-link:hover { background: #c9efdd; }
 
 .disclaimer {
   background: var(--warn-light);
@@ -875,7 +878,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 @media (max-width: 768px) {
   nav { padding: 0 1rem; overflow-x: auto; }
   .hero { padding: 3rem 1.25rem 2rem; }
-  .hero h1 { font-size: 2.2rem; letter-spacing: -1.2px; }
+  .hero h1 { font-size: 1.8rem; letter-spacing: -0.6px; }
   .hero > p { font-size: 14px; }
   .main { grid-template-columns: 1fr; padding: 0 1rem 3rem; gap: 12px; margin-top: 1rem; }
   .filters-panel { position: static; }
@@ -884,7 +887,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   .filter-toggle-btn { display: flex; }
   .stats-row { max-width: 100%; flex-wrap: wrap; }
   .stats-row .stat { flex: 1 1 calc(50% - 1px); min-width: 130px; }
-  .stat-num { font-size: 1.2rem; }
+  .stat-num { font-size: 1.05rem; }
   .modal-grid { grid-template-columns: 1fr; }
   .source-card { grid-template-columns: 10px 1fr; }
   .nav-links li:nth-child(4), .nav-links li:nth-child(5) { display: none; }
@@ -1081,12 +1084,12 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 </div>
 
 <div id="view-saved" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
-  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:2rem;letter-spacing:-0.5px">Oportunități salvate</h2>
+  <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;margin-bottom:2rem;letter-spacing:-0.5px">Oportunități salvate</h2>
   <div id="saved-list"></div>
 </div>
 
 <div id="view-alerts" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
-  <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;margin-bottom:1rem;letter-spacing:-0.5px">Alerte & căutări salvate</h2>
+  <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;margin-bottom:1rem;letter-spacing:-0.5px">Alerte & căutări salvate</h2>
   <p style="color:var(--ink2);font-size:14px;margin-bottom:2rem;font-weight:300;">Vei fi notificat când apar oportunități noi pentru criteriile salvate.</p>
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:12px;">
@@ -1103,7 +1106,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 <!-- SOURCES VIEW -->
 <div id="view-sources" style="display:none;max-width:960px;margin:0 auto;padding:2rem 2rem 4rem;">
   <div style="margin-bottom:2rem;">
-    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:0.4rem;">Surse indexate</h2>
+    <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:0.4rem;">Surse indexate</h2>
     <p style="color:var(--ink2);font-size:14px;font-weight:300;">Starea și configurația surselor monitorizate de FinMatch România.</p>
   </div>
   <div id="sources-grid"></div>
@@ -1112,7 +1115,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 <!-- ADMIN VIEW -->
 <div id="view-admin" style="display:none;max-width:960px;margin:0 auto;padding:2rem 2rem 4rem;">
   <div style="margin-bottom:2rem;">
-    <h2 style="font-family:var(--font-head);font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:0.4rem;">Panou administrativ</h2>
+    <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:0.4rem;">Panou administrativ</h2>
     <p style="color:var(--ink2);font-size:14px;font-weight:300;">Review queue, surse cu erori, oportunități noi detectate și duplicate suspecte.</p>
   </div>
 
