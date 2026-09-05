@@ -1,5 +1,18 @@
 name = "finmatch"
 main = "src/worker.js"
 compatibility_date = "2024-11-01"
+
 [vars]
 ENVIRONMENT = "production"
+AI_PROVIDER = "anthropic"
+AI_MODEL = "claude-sonnet-4-6"
+# Secret (set separately): npx wrangler secret put AI_API_KEY
+
+# KV for crawl results & source status
+[[kv_namespaces]]
+binding = "FINMATCH_KV"
+id = "8744b18f2c244f23a1fc7f2d842b0947"
+
+# Daily crawl at 05:00 UTC
+[triggers]
+crons = ["0 5 * * *"]
