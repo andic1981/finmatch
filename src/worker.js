@@ -2197,10 +2197,24 @@ function switchAdminTab(tab, btn) {
 
   if (tab === 'review') {
     c.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>Se încarcă coada de review...</p></div>';
-    fetch('/api/review').then(r=>r.json()).then(function(j){
+    Promise.all([fetch('/api/review').then(r=>r.json()), fetch('/api/opportunities').then(r=>r.json())]).then(function(res){
+      const j = res[0] || {}; const pubj = res[1] || {};
+      const published = (pubj.opportunities || []);
+      const pubHtml = '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;">'
+        + '<div style="font-size:12px;color:var(--ink3);"><strong style="color:var(--ink);">' + published.length + '</strong> publicate automat (confidence \u2265 78)</div>'
+        + (published.length ? '<button onclick="purgeAuto(this)" style="font-size:11px;background:var(--accent2-light);color:var(--accent2);border:1px solid rgba(200,80,13,.25);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Retrage toate auto-publicate</button>' : '')
+        + '</div>'
+        + published.map(function(o){
+          return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;margin-bottom:6px;display:flex;align-items:center;gap:10px;">'
+            + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + o.title + '</div>'
+            + '<div style="font-size:11px;color:var(--ink3);">' + o.source + ' \u00b7 conf ' + (o.confidence||0) + '% \u00b7 ' + (o.deadline||'') + '</div></div>'
+            + '<button onclick="unpublishAuto(' + o.id + ',this)" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);flex-shrink:0;">Retrage</button>'
+            + '</div>';
+        }).join('')
+        + (published.length ? '<hr class="filter-sep" style="margin:14px 0;">' : '');
       const items = (j && j.items) || [];
-      if (!items.length) { c.innerHTML = '<div class="empty-state" style="padding:2rem;"><h3>Coadă goală</h3><p>Nicio oportunitate auto-extrasă în așteptare. Rulează un re-crawl în tab-ul Surse.</p></div>'; return; }
-      c.innerHTML = '<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">' + items.length + ' oportunități auto-extrase, sub pragul de auto-publicare (confidence &lt; 78). Aprobă pentru a le publica.</div>' + items.map(function(o){
+      if (!items.length) { c.innerHTML = pubHtml + '<div class="empty-state" style="padding:2rem;"><h3>Coadă goală</h3><p>Nicio oportunitate auto-extrasă în așteptare. Rulează un re-crawl în tab-ul Surse.</p></div>'; return; }
+      c.innerHTML = pubHtml + '<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">' + items.length + ' oportunități auto-extrase, sub pragul de auto-publicare (confidence &lt; 78). Aprobă pentru a le publica.</div>' + items.map(function(o){
         return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;box-shadow:var(--shadow-sm);">'
           + '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">'
           + '<div style="flex:1;min-width:0;">'
@@ -2419,6 +2433,35 @@ async function reviewAction(id, action, btn) {
   }
 }
 
+async function unpublishAuto(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const r = await fetch('/api/published/remove?id=' + id, { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) {
+      const i = OPPORTUNITIES.findIndex(o => o.id === id); if (i >= 0) OPPORTUNITIES.splice(i, 1);
+      showToast('Retras\u0103 din publicare');
+      if (typeof renderResults === 'function') renderResults();
+      switchAdminTab('review');
+    } else { showToast('\u2717 ' + (j.error || 'Eroare')); if (btn) { btn.disabled=false; btn.textContent='Retrage'; } }
+  } catch(e) { showToast('\u2717 Eroare re\u021Bea'); if (btn) btn.disabled=false; }
+}
+
+async function purgeAuto(btn) {
+  if (!confirm('Retragi TOATE oportunit\u0103\u021Bile publicate automat \u0219i gole\u0219ti coada de review?')) return;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const r = await fetch('/api/published/purge', { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) {
+      for (let i = OPPORTUNITIES.length - 1; i >= 0; i--) if (OPPORTUNITIES[i]._auto) OPPORTUNITIES.splice(i, 1);
+      showToast('Retrase ' + (j.removed||0) + ' oportunit\u0103\u021Bi');
+      if (typeof renderResults === 'function') renderResults();
+      switchAdminTab('review');
+    } else { showToast('\u2717 Eroare'); if (btn) btn.disabled=false; }
+  } catch(e) { showToast('\u2717 Eroare re\u021Bea'); if (btn) btn.disabled=false; }
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2555,19 +2598,27 @@ const MONTHS_RO = { 'ianuarie':1,'februarie':2,'martie':3,'aprilie':4,'mai':5,'i
 
 function euroToNumber(str) {
   if (!str) return 0;
-  let s = str.replace(/[.\s]/g, '').replace(',', '.');
+  const lower = str.toLowerCase();
   let mult = 1;
-  if (/mil/i.test(str)) mult = 1000000;
-  else if (/mld|miliard/i.test(str)) mult = 1000000000;
-  const n = parseFloat(s.replace(/[^0-9.]/g, ''));
-  return isNaN(n) ? 0 : Math.round(n * mult);
+  if (/mld|miliard/.test(lower)) mult = 1000000000;
+  else if (/mil/.test(lower)) mult = 1000000;
+  else if (/\bmii\b/.test(lower)) mult = 1000;
+  // RON → EUR approx (only used when the amount is explicitly in lei)
+  const isLei = /\blei\b|\bron\b/.test(lower);
+  const num = lower.replace(/[^\d.,]/g, '');
+  // Romanian formats: "2,5" decimal, "250.000" thousands
+  let n;
+  if (/\d\.\d{3}(?!\d)/.test(num) && !/,/.test(num)) n = parseFloat(num.replace(/\./g, ''));
+  else n = parseFloat(num.replace(/\./g, '').replace(',', '.'));
+  if (isNaN(n)) return 0;
+  let v = Math.round(n * mult);
+  if (isLei) v = Math.round(v * 0.2);
+  return v;
 }
 
 function parseDeadline(text) {
-  // dd.mm.yyyy or dd/mm/yyyy
   let m = text.match(/(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
   if (m) return m[3] + '-' + String(m[2]).padStart(2,'0') + '-' + String(m[1]).padStart(2,'0');
-  // "15 septembrie 2026"
   m = text.match(/(\d{1,2})\s+(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\s+(\d{4})/i);
   if (m) { const mo = MONTHS_RO[m[2].toLowerCase()]; return m[3] + '-' + String(mo).padStart(2,'0') + '-' + String(m[1]).padStart(2,'0'); }
   return null;
@@ -2582,9 +2633,54 @@ function matchKeywords(text, table, max) {
   return max ? hits.slice(0, max) : hits;
 }
 
-// Split markdown into candidate blocks around headings, then score each as an opportunity.
+// ── Relevance gate ─────────────────────────────────────────────────────────
+// STRONG signals: the text describes an actual call / scheme people can apply to.
+const STRONG_SIGNALS = [
+  'apel de proiecte', 'apel de finan', 'apelul', 'ghidul solicitantului', 'ghid al solicitantului',
+  'sesiune de depunere', 'sesiunea de depunere', 'se deschide sesiunea', 'deschide sesiunea',
+  'depunere', 'cerere de finan', 'cereri de finan', 'nerambursabil', 'grant', 'granturi',
+  'ajutor de stat', 'schem', 'linie de finan', 'termen limit', 'termen de depunere',
+  'termenul de depunere', 'beneficiari eligibili', 'eligibil', 'lanseaz', 'se lanseaz',
+  'până la data de', 'pot aplica', 'poți aplica', 'aplica', 'inscrier', 'înscrier', 'voucher',
+];
+// WEAK signals: funding-adjacent vocabulary that also appears in generic business news.
+const WEAK_SIGNALS = ['finanț', 'fonduri', 'program', 'buget', 'sprijin', 'investiț', 'alocare'];
+// NOISE: if present in the title, the block is news/analysis/commerce — not an opportunity.
+const NOISE_TITLE = [
+  'studiu', 'sondaj', 'webinar', 'video', 'podcast', 'interviu', 'opinie', 'editorial', 'analiz',
+  'dobânz', 'dobanz', 'fidelis', 'titluri de stat', 'obligațiuni', 'pensi', 'bursă', 'bursa', 'acțiuni',
+  'profit', 'cifra de afaceri', 'rezultate financiare', 'achiziți', 'cumpără', 'cumpara', 'vândut', 'vinde',
+  'fond de investiții', 'fond de investitii', 'venture', 'private equity', 'investitori', 'listare',
+  'angajat', 'angajaț', 'salari', 'patron', 'ceo', 'director', 'numit', 'demisi',
+  'tva', 'anaf', 'amnisti', 'impozit', 'fiscal', 'taxe', 'declarați',
+  'credit', 'creditar', 'garanți', 'împrumut', 'imprumut', 'dobând', 'leasing',
+  'dolari', 'usd', 'crypto', 'bitcoin',
+  'termen final pentru reform', 'reforme', 'jaloane', 'ținte pnrr',
+  'imobiliar', 'hale', 'terenuri', 'apartament', 'chirii',
+  'jocuri de noroc', 'pariuri', 'superbet', 'cazino',
+  'cele mai citite', 'recomand', 'articole similare', 'newsletter', 'abonare', 'abonează',
+  'contact', 'redacți', 'termeni', 'cookie', 'politica', 'despre noi', 'autentificare', 'login',
+  'comentarii', 'distribuie', 'share', 'urmăre', 'facebook', 'linkedin', 'instagram', 'youtube',
+  'expir', 's-a încheiat', 'a expirat', 'închis', 'închide', 'inchis',
+];
+// Section labels / navigation headings that are never opportunities.
+const SECTION_LABELS = /^(finanț(ă|a)ri|fonduri( europene)?|știri|stiri|noutăți|noutati|ultimele|categorii|meniu|acasă|acasa|home|cele mai citite|parteneri|descoperă|descopera|newsletter|căutare|cautare|search)$/i;
+
+function cleanTitle(raw) {
+  let t = raw || '';
+  // [text](url) → text ; ![alt](src) → ''
+  t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, '');
+  t = t.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');
+  t = t.replace(/[#*_`]/g, '').replace(/\s+/g, ' ').trim();
+  // Drop trailing site-name suffixes: " - StartupCafe", " | MFE"
+  t = t.replace(/\s*[-|–—]\s*(startupcafe|fonduri[- ]structurale|mfe|mipe|adr\s?\w+|afir|hotnews|economica)\.?(ro)?\s*$/i, '');
+  return t;
+}
+
+// Split markdown into candidate blocks around headings, then gate + score each.
 function extractOpportunities(markdown, src) {
   if (!markdown || markdown.length < 200) return [];
+  const today = new Date().toISOString().slice(0, 10);
   const lines = markdown.split('\n');
   const blocks = [];
   let cur = null;
@@ -2592,8 +2688,10 @@ function extractOpportunities(markdown, src) {
     const h = line.match(/^#{1,4}\s+(.+)/) || line.match(/^\*\*(.+?)\*\*\s*$/);
     if (h) {
       if (cur) blocks.push(cur);
-      cur = { title: h[1].replace(/[#*]/g, '').trim(), body: '' };
+      cur = { title: cleanTitle(h[1]), body: '' };
     } else if (cur) {
+      // Ignore pure-link / image lines in bodies (nav clutter)
+      if (/^\s*!?\[[^\]]*\]\([^)]*\)\s*$/.test(line)) continue;
       cur.body += ' ' + line;
     }
   }
@@ -2602,49 +2700,64 @@ function extractOpportunities(markdown, src) {
   const out = [];
   for (const b of blocks) {
     const title = b.title;
-    if (!title || title.length < 12 || title.length > 160) continue;
-    const text = (title + ' ' + b.body).slice(0, 1500);
+    if (!title || title.length < 18 || title.length > 170) continue;
+    if (SECTION_LABELS.test(title)) continue;
+
+    const lt_title = title.toLowerCase();
+    if (NOISE_TITLE.some(n => lt_title.includes(n))) continue;
+
+    const body = cleanTitle(b.body).slice(0, 1500);
+    const text = title + ' ' + body;
     const lt = text.toLowerCase();
 
-    // Must look like a funding call.
-    const fundingSignals = ['finanț', 'grant', 'apel', 'fonduri', 'nerambursabil', 'sprijin', 'schemă', 'program', 'buget', 'eligibil'];
-    const signalHits = fundingSignals.filter(s => lt.includes(s)).length;
-    if (signalHits < 1) continue;
+    const strong = STRONG_SIGNALS.filter(s => lt.includes(s)).length;
+    const weak = WEAK_SIGNALS.filter(s => lt.includes(s)).length;
+    const deadline = parseDeadline(text);
+    const euroMatches = [...text.matchAll(/(?:€|eur\b|euro)\s?([\d.,]+)\s*(mii|mil(?:ioane)?|mld|miliarde)?|([\d.,]+)\s*(mii|mil(?:ioane)?|mld|miliarde)?\s*(?:€|eur\b|euro|lei|ron)\b/gi)];
+    let grantMax = 0;
+    for (const em of euroMatches) {
+      const raw = em[0];
+      const v = euroToNumber(raw);
+      if (v > grantMax) grantMax = v;
+    }
+
+    // ── Gate: must look like an applicable call, not just money-adjacent news ──
+    // Need at least one STRONG signal, plus (a second strong OR a deadline OR a concrete amount).
+    const concrete = (deadline ? 1 : 0) + (grantMax > 0 ? 1 : 0);
+    if (strong === 0) continue;
+    if (strong === 1 && concrete === 0) continue;
+    // Past deadlines are not opportunities.
+    if (deadline && deadline < today) continue;
 
     const domains = matchKeywords(text, DOMAIN_KEYWORDS);
     const beneficiaries = matchKeywords(text, BENEF_KEYWORDS);
     const regionHits = matchKeywords(text, REGION_KEYWORDS);
     const regions = regionHits.length ? regionHits : ['Național'];
-    const deadline = parseDeadline(text);
-    const euroMatches = [...text.matchAll(/(?:€|EUR)\s?([\d.,]+)\s*(mil(?:ioane)?|mld|miliarde)?|([\d.,]+)\s*(?:€|EUR|euro)\s*(mil(?:ioane)?|mld|miliarde)?/gi)];
-    let grantMax = 0;
-    for (const em of euroMatches) {
-      const raw = (em[1] || em[3] || '') + ' ' + (em[2] || em[4] || '');
-      const v = euroToNumber(raw);
-      if (v > grantMax) grantMax = v;
-    }
 
-    // Confidence: reward concrete signals.
-    let conf = 30;
-    conf += Math.min(signalHits * 8, 24);
-    if (domains.length) conf += 12;
-    if (beneficiaries.length) conf += 12;
+    // ── Confidence ──
+    let conf = 25;
+    conf += Math.min(strong * 12, 36);
+    conf += Math.min(weak * 3, 9);
     if (deadline) conf += 12;
-    if (grantMax > 0) conf += 10;
-    conf = Math.min(conf, 95);
+    if (grantMax > 0) conf += 8;
+    if (domains.length) conf += 6;
+    if (beneficiaries.length) conf += 6;
+    if (body.length < 80) conf -= 12;          // title-only (list pages) is weaker evidence
+    if (src.tier === 3) conf = Math.min(conf, 74); // editorial sources never auto-publish
+    conf = Math.max(20, Math.min(conf, 95));
 
     out.push({
       title: title.slice(0, 140),
       source: src.host, sourceTier: src.tier,
       official_url: src.url, sourcePages: [src.url],
       program: title.slice(0, 80), callCode: 'AUTO/' + src.host,
-      summary: b.body.trim().slice(0, 260) || title,
+      summary: body.slice(0, 260) || title,
       domains: domains.length ? domains : ['Antreprenoriat'],
       beneficiaries: beneficiaries.length ? beneficiaries : ['IMM'],
       regions,
       grantMin: 0, grantMax: grantMax || 0, cofinancing: 0,
       deadline: deadline || 'Nespecificat',
-      launchDate: new Date().toISOString().slice(0,10),
+      launchDate: today,
       who: beneficiaries.join(', ') || 'Vezi ghidul oficial.',
       activities: 'Extras automat — verifică sursa oficială.',
       isUrgent: false, confidence: conf,
@@ -2965,6 +3078,25 @@ export default {
       }
       await env.FINMATCH_KV.put('opps:review', JSON.stringify(rev));
       return jsonResp({ ok: true, action: pathname.endsWith('approve') ? 'approved' : 'rejected', id });
+    }
+
+    // Unpublish one auto item: POST /api/published/remove?id=   |  Purge all auto: POST /api/published/purge
+    if (pathname === '/api/published/remove' || pathname === '/api/published/purge') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      if (!env.FINMATCH_KV) return jsonResp({ error: 'KV indisponibil' }, 400);
+      let pub = {};
+      try { const p = await env.FINMATCH_KV.get('opps:published'); if (p) pub = JSON.parse(p); } catch(e){}
+      if (pathname.endsWith('purge')) {
+        const n = Object.keys(pub).length;
+        await env.FINMATCH_KV.put('opps:published', JSON.stringify({}));
+        await env.FINMATCH_KV.put('opps:review', JSON.stringify({}));
+        return jsonResp({ ok: true, removed: n });
+      }
+      const id = url.searchParams.get('id');
+      if (!id || !pub[id]) return jsonResp({ error: 'Element inexistent' }, 404);
+      delete pub[id];
+      await env.FINMATCH_KV.put('opps:published', JSON.stringify(pub));
+      return jsonResp({ ok: true, id });
     }
 
     if (pathname === '/api/recrawl') {
