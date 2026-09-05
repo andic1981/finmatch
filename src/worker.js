@@ -906,6 +906,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   </div>
   <ul class="nav-links">
     <li><a class="active" onclick="showView('search')">Căutare</a></li>
+    <li><a onclick="showView('match')">Potrivire AI</a></li>
     <li><a onclick="showView('saved')">Salvate</a></li>
     <li><a onclick="showView('alerts')">Alerte</a></li>
     <li><a onclick="showView('sources')">Surse</a></li>
@@ -1083,6 +1084,76 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   </div>
 </div>
 
+<div id="view-match" style="display:none;max-width:820px;margin:2.5rem auto;padding:0 2rem 4rem;">
+  <div style="text-align:center;margin-bottom:2rem;">
+    <div class="hero-badge" style="margin-bottom:1rem;">Asistent AI de potrivire</div>
+    <h2 style="font-family:var(--font-head);font-size:1.6rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:0.5rem;">Găsește finanțarea potrivită pentru tine</h2>
+    <p style="color:var(--ink2);font-size:14px;font-weight:300;max-width:520px;margin:0 auto;">Completează profilul proiectului tău și AI-ul îți clasifică programele după potrivire, cu explicații.</p>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;box-shadow:var(--shadow-sm);margin-bottom:1.5rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div>
+        <label class="filter-label">Tip organizație</label>
+        <select id="m-org" class="wl-input">
+          <option value="IMM">IMM</option>
+          <option value="Startup">Startup</option>
+          <option value="ONG">ONG</option>
+          <option value="UAT">UAT / Autoritate publică</option>
+          <option value="Fermier">Fermier</option>
+          <option value="Universitate">Universitate</option>
+        </select>
+      </div>
+      <div>
+        <label class="filter-label">Regiune</label>
+        <select id="m-region" class="wl-input">
+          <option value="Oricare">Oricare</option>
+          <option value="Vest">Vest</option>
+          <option value="Nord-Vest">Nord-Vest</option>
+          <option value="Nord-Est">Nord-Est</option>
+          <option value="Centru">Centru</option>
+          <option value="București-Ilfov">București-Ilfov</option>
+          <option value="Național">Național</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label class="filter-label">Domenii de interes (alege unul sau mai multe)</label>
+      <div class="filter-chips" id="m-domains">
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Digitalizare">Digitalizare</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Energie">Energie</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Agricultură">Agricultură</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Antreprenoriat">Antreprenoriat</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Infrastructură">Infrastructură</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Mediu">Mediu</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Sănătate">Sănătate</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cercetare / inovare">Cercetare</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Incluziune socială">Incluziune</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cultură">Cultură</button>
+        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Turism">Turism</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+      <div>
+        <label class="filter-label">Buget proiect estimat (€)</label>
+        <input type="number" id="m-size" class="wl-input" placeholder="ex: 250000" min="0" step="10000">
+      </div>
+      <div>
+        <label class="filter-label">Descriere scurtă (opțional)</label>
+        <input type="text" id="m-desc" class="wl-input" placeholder="ex: modernizare fermă cu panouri solare">
+      </div>
+    </div>
+
+    <button onclick="runMatch()" id="m-btn" style="margin-top:16px;width:100%;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;">
+      ✨ Găsește potrivirile
+    </button>
+  </div>
+
+  <div id="m-results"></div>
+</div>
+
 <div id="view-saved" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
   <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;margin-bottom:2rem;letter-spacing:-0.5px">Oportunități salvate</h2>
   <div id="saved-list"></div>
@@ -1234,12 +1305,12 @@ const SOURCES = {
     pages: ['https://vest.ro']
   },
   'fonduri-structurale.ro': {
-    name: 'Fonduri Structurale', tier: 3, status: 'ok', note: 'Sursă editorială — necesită confirmare oficială', opps: 1,
-    pages: ['https://fonduri-structurale.ro']
+    name: 'Fonduri Structurale', tier: 3, status: 'ok', note: 'Sursă editorială — crawling live via Firecrawl', opps: 1,
+    pages: ['https://www.fonduri-structurale.ro']
   },
   'startupcafe.ro': {
-    name: 'StartupCafe', tier: 3, status: 'ok', note: 'Sursă editorială — necesită confirmare oficială', opps: 1,
-    pages: ['https://startupcafe.ro']
+    name: 'StartupCafe', tier: 3, status: 'ok', note: 'Sursă editorială — crawling live via Firecrawl', opps: 1,
+    pages: ['https://www.startupcafe.ro/finantari']
   },
   'eeagrants.ro': {
     name: 'Granturi SEE & Norvegiene', tier: 1, status: 'warn',
@@ -1251,6 +1322,12 @@ const SOURCES = {
       'https://www.eeagrants.ro/programe/energie',
       'https://www.eeagrants.ro/programe/cetatenie-activa',
     ]
+  },
+  'cinea.ec.europa.eu': {
+    name: 'CINEA (Comisia Europeană)', tier: 1, status: 'warn',
+    note: 'Agenția Executivă pentru Climă, Infrastructură și Mediu — LIFE, CEF, Innovation Fund. Crawling live via Firecrawl.',
+    opps: 0,
+    pages: ['https://cinea.ec.europa.eu/funding-and-tenders_en', 'https://cinea.ec.europa.eu/programmes/life_en']
   },
 };
 
@@ -1615,6 +1692,22 @@ function toggleFilters(btn) {
   if (arrow) arrow.textContent = isOpen ? '▴' : '▾';
 }
 
+async function loadPublished() {
+  try {
+    const r = await fetch('/api/opportunities');
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j.opportunities && j.opportunities.length) {
+      const existing = new Set(OPPORTUNITIES.map(o => o.id));
+      for (const o of j.opportunities) if (!existing.has(o.id)) OPPORTUNITIES.push(o);
+      const ac = OPPORTUNITIES.filter(o => o.status === 'ACTIV').length;
+      const el = document.getElementById('cnt-active'); if (el) el.textContent = ac;
+      const ct = document.getElementById('cnt-today'); if (ct) ct.textContent = OPPORTUNITIES.length;
+      if (typeof renderResults === 'function') renderResults();
+    }
+  } catch(e) {}
+}
+
 function init() {
   // Update hero badge and stats with real data
   const activeCount = OPPORTUNITIES.filter(o => o.status === 'ACTIV').length;
@@ -1632,6 +1725,7 @@ function init() {
     if (alts) alerts = JSON.parse(alts);
   } catch(e) {}
   renderResults();
+  loadPublished();
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') doSearch();
   });
@@ -1639,17 +1733,18 @@ function init() {
 
 /* ── View routing ────────────────────────────────────────────────────────── */
 function showView(view) {
-  ['search','saved','alerts','sources','admin'].forEach(v => {
+  ['search','match','saved','alerts','sources','admin'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-links a').forEach((a, i) => {
-    a.classList.toggle('active', ['search','saved','alerts','sources','admin'][i] === view);
+    a.classList.toggle('active', ['search','match','saved','alerts','sources','admin'][i] === view);
   });
   if (view === 'saved') renderSaved();
   if (view === 'alerts') renderAlerts();
   if (view === 'sources') renderSources();
   if (view === 'admin') renderAdmin();
+  if (view === 'match') initMatch();
 }
 
 function setSearch(q) {
@@ -2027,9 +2122,17 @@ function renderAlerts() {
 function removeAlert(i) { alerts.splice(i, 1); renderAlerts(); persistState(); showToast('Alertă eliminată'); }
 
 /* ── Sources view ────────────────────────────────────────────────────────── */
-function renderSources() {
+async function renderSources() {
   const container = document.getElementById('sources-grid');
-  const srcList = Object.entries(SOURCES);
+  let live = {}, lastRun = null;
+  try { const r = await fetch('/api/sources'); if (r.ok) { const j = await r.json(); live = j.sources || {}; lastRun = j.lastFullRun; } } catch(e) {}
+  window.__lastCrawl = lastRun;
+  const merged = {};
+  for (const [h, s] of Object.entries(SOURCES)) {
+    const l = live[h];
+    merged[h] = l ? Object.assign({}, s, { status: l.status, lastRun: l.lastRun, chars: l.chars, error: l.error }) : s;
+  }
+  const srcList = Object.entries(merged);
   const okCount = srcList.filter(([,s])=>s.status==='ok').length;
   const warnCount = srcList.filter(([,s])=>s.status==='warn').length;
   const errCount = srcList.filter(([,s])=>s.status==='err').length;
@@ -2093,6 +2196,32 @@ function switchAdminTab(tab, btn) {
   const c = document.getElementById('admin-content');
 
   if (tab === 'review') {
+    c.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>Se încarcă coada de review...</p></div>';
+    fetch('/api/review').then(r=>r.json()).then(function(j){
+      const items = (j && j.items) || [];
+      if (!items.length) { c.innerHTML = '<div class="empty-state" style="padding:2rem;"><h3>Coadă goală</h3><p>Nicio oportunitate auto-extrasă în așteptare. Rulează un re-crawl în tab-ul Surse.</p></div>'; return; }
+      c.innerHTML = '<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;">' + items.length + ' oportunități auto-extrase, sub pragul de auto-publicare (confidence &lt; 78). Aprobă pentru a le publica.</div>' + items.map(function(o){
+        return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;box-shadow:var(--shadow-sm);">'
+          + '<div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;">'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">'
+          + '<span style="font-size:10px;background:var(--warn-light);color:var(--warn);padding:2px 8px;border-radius:100px;">Confidence ' + (o.confidence||0) + '%</span>'
+          + '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:2px 8px;border-radius:100px;">' + o.source + '</span>'
+          + (o.deadline && o.deadline!=='Nespecificat' ? '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:2px 8px;border-radius:100px;">' + o.deadline + '</span>' : '')
+          + '</div>'
+          + '<div style="font-weight:500;font-size:13px;margin-bottom:3px;">' + o.title + '</div>'
+          + '<div style="font-size:12px;color:var(--ink3);line-height:1.5;">' + (o.summary||'').slice(0,160) + '</div>'
+          + '<div style="font-size:11px;color:var(--ink3);margin-top:5px;">' + (o.domains||[]).join(', ') + (o.grantMax? ' \u00b7 pân\u0103 la \u20ac' + o.grantMax.toLocaleString('ro-RO') : '') + '</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+          + '<button onclick="reviewAction(' + o.id + ',\\'approve\\',this)" style="font-size:12px;background:var(--accent);color:white;border:none;padding:6px 13px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Aprob\u0103</button>'
+          + '<button onclick="reviewAction(' + o.id + ',\\'reject\\',this)" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:6px 13px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Respinge</button>'
+          + '</div></div></div>';
+      }).join('');
+    }).catch(function(){ c.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>Eroare la încărcarea cozii.</p></div>'; });
+    return;
+  }
+  if (tab === '__never__') {
     const queue = OPPORTUNITIES.filter(o => (o.confidence||100) < 80 || o.sourceTier === 3);
     c.innerHTML = queue.length ? queue.map(o => \`
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;">
@@ -2127,7 +2256,7 @@ function switchAdminTab(tab, btn) {
           <div style="font-weight:500;color:var(--ink);">\${s.pages.length} pagini</div>
           <div>\${s.opps} intrări</div>
         </div>
-        <button onclick="showToast('Re-crawl inițiat pentru \${s.name}')" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);flex-shrink:0;">Re-crawl</button>
+        <button onclick="recrawlSource(\'\${id}\', this)" style="font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);flex-shrink:0;">Re-crawl</button>
       </div>
     \`).join('');
   }
@@ -2173,6 +2302,123 @@ function switchAdminTab(tab, btn) {
 }
 
 /* ── Shared utils ────────────────────────────────────────────────────────── */
+async function recrawlSource(host, btn) {
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = 'Se crawleaza...'; btn.disabled = true; }
+  try {
+    const r = await fetch('/api/recrawl?host=' + encodeURIComponent(host), { method: 'POST' });
+    const j = await r.json();
+    if (j.ok && j.result) {
+      const s = j.result;
+      showToast('\u2713 ' + host + ': ' + s.status.toUpperCase() + ((s.published||s.queued)?(' \u2014 ' + (s.published||0) + ' publicate, ' + (s.queued||0) + ' \xeen review'):(' \u2014 ' + (s.chars||0) + ' caractere')));
+    } else {
+      showToast('\u2717 ' + host + ': ' + ((j.result && j.result.error) || j.error || 'eroare'));
+    }
+  } catch(e) {
+    showToast('\u2717 Eroare retea: ' + host);
+  } finally {
+    if (btn) { btn.textContent = original; btn.disabled = false; }
+    const sv = document.getElementById('view-sources');
+    if (typeof renderSources === 'function' && sv && sv.style.display !== 'none') renderSources();
+  }
+}
+
+let mDomains = new Set();
+
+function initMatch() {
+  // no-op init; keeps state between visits
+}
+
+function mToggleDomain(btn) {
+  const v = btn.dataset.val;
+  if (mDomains.has(v)) { mDomains.delete(v); btn.classList.remove('active'); }
+  else { mDomains.add(v); btn.classList.add('active'); }
+}
+
+async function runMatch() {
+  const btn = document.getElementById('m-btn');
+  const box = document.getElementById('m-results');
+  const profile = {
+    orgType: document.getElementById('m-org').value,
+    region: document.getElementById('m-region').value,
+    domains: [...mDomains],
+    projectSize: Number(document.getElementById('m-size').value) || 0,
+    description: document.getElementById('m-desc').value.trim(),
+  };
+  btn.disabled = true; btn.textContent = '\u2728 Se analizează...';
+  box.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' +
+    Array(3).fill('<div class="skeleton" style="height:96px;"></div>').join('') + '</div>';
+  try {
+    const r = await fetch('/api/match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    const j = await r.json();
+    renderMatchResults(j);
+  } catch (e) {
+    box.innerHTML = '<div class="empty-state"><h3>Eroare</h3><p>Nu am putut rula potrivirea. Încearcă din nou.</p></div>';
+  } finally {
+    btn.disabled = false; btn.textContent = '\u2728 Găsește potrivirile';
+  }
+}
+
+function renderMatchResults(data) {
+  const box = document.getElementById('m-results');
+  if (!data || !data.results || !data.results.length) {
+    box.innerHTML = '<div class="empty-state"><h3>Nicio potrivire găsită</h3><p>Încearcă să lărgești domeniile sau regiunea.</p></div>';
+    return;
+  }
+  const badge = data.usedAI
+    ? '<span style="font-size:11px;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:100px;border:1px solid rgba(26,92,56,.2);">✨ Clasat de AI</span>'
+    : '<span style="font-size:11px;color:var(--ink3);background:var(--surface2);padding:3px 10px;border-radius:100px;">Clasat pe reguli</span>';
+  const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
+    '<div style="font-size:13px;color:var(--ink2);"><strong>' + data.results.length + '</strong> potriviri</div>' + badge + '</div>';
+
+  box.innerHTML = head + data.results.map(function(r) {
+    const o = r.opp;
+    const sc = r.score || 0;
+    const col = sc >= 75 ? 'var(--accent)' : sc >= 50 ? 'var(--warn)' : 'var(--ink3)';
+    const statusCls = o.status === 'ACTIV' ? 'active' : o.status === 'URMEAZĂ' ? 'upcoming' : 'closed';
+    return '<div class="opp-card" onclick="openDetail(' + o.id + ')" style="cursor:pointer;">' +
+      '<div style="display:flex;align-items:flex-start;gap:14px;">' +
+        '<div style="flex-shrink:0;width:52px;height:52px;border-radius:50%;background:conic-gradient(' + col + ' ' + (sc*3.6) + 'deg, var(--surface2) 0deg);display:flex;align-items:center;justify-content:center;position:relative;">' +
+          '<div style="position:absolute;width:42px;height:42px;border-radius:50%;background:var(--surface);"></div>' +
+          '<span style="position:relative;font-family:var(--font-head);font-weight:700;font-size:14px;color:' + col + ';">' + sc + '</span>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">' +
+            '<span class="status-badge ' + statusCls + '">' + o.status + '</span>' +
+            '<span class="source-tier ' + (o.sourceTier===1?'tier1':'') + '">' + o.source + '</span>' +
+          '</div>' +
+          '<div class="opp-title" style="margin-bottom:5px;">' + o.title + '</div>' +
+          '<div style="font-size:12.5px;color:var(--ink2);line-height:1.55;font-weight:300;"><strong style="color:var(--ink);font-weight:500;">De ce se potrivește:</strong> ' + (r.reason || '\u2014') + '</div>' +
+          '<div style="margin-top:8px;font-size:12px;color:var(--ink3);">Grant până la <strong style="color:var(--ink);">\u20ac' + o.grantMax.toLocaleString('ro-RO') + '</strong> \u00b7 ' + o.deadline + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function reviewAction(id, action, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const r = await fetch('/api/review/' + action + '?id=' + id, { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) {
+      showToast(action === 'approve' ? '\u2713 Publicat\u0103' : 'Respins\u0103');
+      if (action === 'approve') loadPublished();
+      switchAdminTab('review');
+    } else {
+      showToast('\u2717 ' + (j.error || 'Eroare'));
+      if (btn) { btn.disabled = false; btn.textContent = action==='approve'?'Aprob\u0103':'Respinge'; }
+    }
+  } catch(e) {
+    showToast('\u2717 Eroare re\u021Bea');
+    if (btn) { btn.disabled = false; }
+  }
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2229,7 +2475,396 @@ const API_OPPORTUNITIES = [
 
   { id:20, status:'URMEĂZĂ', source:'eeagrants.ro', sourceTier:1, domains:['Mediu','Educație','Sănătate','Cercetare / inovare','Incluziune socială','Cultură'], beneficiaries:['ONG','IMM','UAT','Universitate'], regions:[`Național`], grantMin:50000, grantMax:5000000, program:'Granturi SEE & Norvegiene' },];
 
+
+/* ═══ CRAWLING LAYER — Firecrawl + KV ═══
+   Secret: FIRECRAWL_API_KEY | KV binding: FINMATCH_KV (namespace finmatch-kv)
+   KV keys: src:status (map), src:raw:<host>, src:lastFullRun */
+const CRAWL_SOURCES = [
+  { host: 'mfe.gov.ro',             url: 'https://mfe.gov.ro/category/ultimele-apeluri-prima-pagina/', tier: 1, proxy: 'enhanced' },
+  { host: 'adrvest.ro',             url: 'https://adrvest.ro/programul-tranzitie-justa-ghiduri-de-finantare-active/', tier: 1, proxy: 'auto' },
+  { host: 'adrnordest.ro',          url: 'https://www.adrnordest.ro', tier: 1, proxy: 'enhanced' },
+  { host: 'oportunitati-ue.gov.ro', url: 'https://oportunitati-ue.gov.ro', tier: 1, proxy: 'auto' },
+  { host: 'afir.ro',                url: 'https://afir.ro', tier: 1, proxy: 'auto' },
+  { host: 'commission.europa.eu',   url: 'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro', tier: 1, proxy: 'auto' },
+  { host: 'cinea.ec.europa.eu',     url: 'https://cinea.ec.europa.eu/funding-and-tenders_en', tier: 1, proxy: 'auto' },
+  { host: 'fonduri-structurale.ro', url: 'https://www.fonduri-structurale.ro', tier: 3, proxy: 'auto' },
+  { host: 'startupcafe.ro',         url: 'https://www.startupcafe.ro/finantari', tier: 3, proxy: 'auto' },
+  { host: 'eeagrants.ro',           url: 'https://www.eeagrants.ro/apeluri?filtru_status=Activ', tier: 1, proxy: 'auto' },
+];
+
+async function firecrawlScrape(src, apiKey) {
+  const started = Date.now();
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: src.url, formats: ['markdown'], onlyMainContent: true, blockAds: true,
+        proxy: src.proxy || 'auto', timeout: 45000,
+        location: { country: 'RO', languages: ['ro-RO'] },
+      }),
+    });
+    const ms = Date.now() - started;
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { const j = await res.json(); msg = j.error || msg; } catch (e) {}
+      return { ok: false, ms, error: msg, statusCode: res.status };
+    }
+    const j = await res.json();
+    const md = (j && j.data && j.data.markdown) ? j.data.markdown : '';
+    const meta = (j && j.data && j.data.metadata) ? j.data.metadata : {};
+    const title = Array.isArray(meta.title) ? meta.title[0] : (meta.title || '');
+    return { ok: !!md, ms, markdown: md, title, statusCode: meta.statusCode || 200 };
+  } catch (e) {
+    return { ok: false, ms: Date.now() - started, error: String(e && e.message || e) };
+  }
+}
+
+// ─── EXTRACTION: crawled markdown → structured opportunities ───────────────
+// Rule-based. High-confidence entries auto-publish; the rest go to review.
+const DOMAIN_KEYWORDS = {
+  'Digitalizare': ['digital', 'digitaliz', 'IT', 'software', 'cloud', 'cyber', 'tehnolog'],
+  'Energie': ['energie', 'energetic', 'fotovoltaic', 'solar', 'eolian', 'regenerabil', 'REPowerEU'],
+  'Agricultură': ['agricultur', 'fermier', 'rural', 'AFIR', 'PNDR', 'exploata'],
+  'Educație': ['educa', 'școal', 'universit', 'formare', 'training'],
+  'Antreprenoriat': ['antreprenor', 'startup', 'start-up', 'IMM', 'afacer', 'microîntreprin'],
+  'Infrastructură': ['infrastructur', 'drum', 'construc', 'reabilitare', 'moderniz'],
+  'Mediu': ['mediu', 'ecolog', 'biodiversit', 'clim', 'deșeuri', 'apă'],
+  'Sănătate': ['sănăta', 'spital', 'medic', 'sanitar', 'clinic'],
+  'Cercetare / inovare': ['cercetare', 'inovare', 'R&D', 'Horizon', 'științ'],
+  'Incluziune socială': ['incluziune', 'social', 'vulnerabil', 'defavoriza', 'marginaliz'],
+  'Cultură': ['cultur', 'patrimoniu', 'artist', 'UNESCO', 'muze'],
+  'Turism': ['turism', 'turistic', 'cazare', 'agroturism'],
+};
+const BENEF_KEYWORDS = {
+  'IMM': ['IMM', 'întreprindere mic', 'microîntreprin', 'firm'],
+  'Startup': ['startup', 'start-up'],
+  'ONG': ['ONG', 'organizați', 'asociați', 'fundați', 'societate civil'],
+  'UAT': ['UAT', 'autoritate local', 'primări', 'comun', 'municipi', 'consiliu județ'],
+  'Fermier': ['fermier', 'agricultor', 'exploatați agricol'],
+  'Universitate': ['universit', 'institut de cercetare', 'facultat'],
+};
+const REGION_KEYWORDS = {
+  'Vest': ['regiunea vest', 'timiș', 'arad', 'hunedoara', 'caraș'],
+  'Nord-Vest': ['nord-vest', 'cluj', 'bihor', 'maramureș', 'satu mare'],
+  'Nord-Est': ['nord-est', 'iași', 'bacău', 'suceava', 'botoșani', 'neamț', 'vaslui'],
+  'Centru': ['regiunea centru', 'brașov', 'sibiu', 'mureș', 'alba', 'harghita', 'covasna'],
+  'București-Ilfov': ['bucurești', 'ilfov'],
+};
+const MONTHS_RO = { 'ianuarie':1,'februarie':2,'martie':3,'aprilie':4,'mai':5,'iunie':6,'iulie':7,'august':8,'septembrie':9,'octombrie':10,'noiembrie':11,'decembrie':12 };
+
+function euroToNumber(str) {
+  if (!str) return 0;
+  let s = str.replace(/[.\s]/g, '').replace(',', '.');
+  let mult = 1;
+  if (/mil/i.test(str)) mult = 1000000;
+  else if (/mld|miliard/i.test(str)) mult = 1000000000;
+  const n = parseFloat(s.replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? 0 : Math.round(n * mult);
+}
+
+function parseDeadline(text) {
+  // dd.mm.yyyy or dd/mm/yyyy
+  let m = text.match(/(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
+  if (m) return m[3] + '-' + String(m[2]).padStart(2,'0') + '-' + String(m[1]).padStart(2,'0');
+  // "15 septembrie 2026"
+  m = text.match(/(\d{1,2})\s+(ianuarie|februarie|martie|aprilie|mai|iunie|iulie|august|septembrie|octombrie|noiembrie|decembrie)\s+(\d{4})/i);
+  if (m) { const mo = MONTHS_RO[m[2].toLowerCase()]; return m[3] + '-' + String(mo).padStart(2,'0') + '-' + String(m[1]).padStart(2,'0'); }
+  return null;
+}
+
+function matchKeywords(text, table, max) {
+  const lt = text.toLowerCase();
+  const hits = [];
+  for (const [label, kws] of Object.entries(table)) {
+    if (kws.some(k => lt.includes(k.toLowerCase()))) hits.push(label);
+  }
+  return max ? hits.slice(0, max) : hits;
+}
+
+// Split markdown into candidate blocks around headings, then score each as an opportunity.
+function extractOpportunities(markdown, src) {
+  if (!markdown || markdown.length < 200) return [];
+  const lines = markdown.split('\n');
+  const blocks = [];
+  let cur = null;
+  for (const line of lines) {
+    const h = line.match(/^#{1,4}\s+(.+)/) || line.match(/^\*\*(.+?)\*\*\s*$/);
+    if (h) {
+      if (cur) blocks.push(cur);
+      cur = { title: h[1].replace(/[#*]/g, '').trim(), body: '' };
+    } else if (cur) {
+      cur.body += ' ' + line;
+    }
+  }
+  if (cur) blocks.push(cur);
+
+  const out = [];
+  for (const b of blocks) {
+    const title = b.title;
+    if (!title || title.length < 12 || title.length > 160) continue;
+    const text = (title + ' ' + b.body).slice(0, 1500);
+    const lt = text.toLowerCase();
+
+    // Must look like a funding call.
+    const fundingSignals = ['finanț', 'grant', 'apel', 'fonduri', 'nerambursabil', 'sprijin', 'schemă', 'program', 'buget', 'eligibil'];
+    const signalHits = fundingSignals.filter(s => lt.includes(s)).length;
+    if (signalHits < 1) continue;
+
+    const domains = matchKeywords(text, DOMAIN_KEYWORDS);
+    const beneficiaries = matchKeywords(text, BENEF_KEYWORDS);
+    const regionHits = matchKeywords(text, REGION_KEYWORDS);
+    const regions = regionHits.length ? regionHits : ['Național'];
+    const deadline = parseDeadline(text);
+    const euroMatches = [...text.matchAll(/(?:€|EUR)\s?([\d.,]+)\s*(mil(?:ioane)?|mld|miliarde)?|([\d.,]+)\s*(?:€|EUR|euro)\s*(mil(?:ioane)?|mld|miliarde)?/gi)];
+    let grantMax = 0;
+    for (const em of euroMatches) {
+      const raw = (em[1] || em[3] || '') + ' ' + (em[2] || em[4] || '');
+      const v = euroToNumber(raw);
+      if (v > grantMax) grantMax = v;
+    }
+
+    // Confidence: reward concrete signals.
+    let conf = 30;
+    conf += Math.min(signalHits * 8, 24);
+    if (domains.length) conf += 12;
+    if (beneficiaries.length) conf += 12;
+    if (deadline) conf += 12;
+    if (grantMax > 0) conf += 10;
+    conf = Math.min(conf, 95);
+
+    out.push({
+      title: title.slice(0, 140),
+      source: src.host, sourceTier: src.tier,
+      official_url: src.url, sourcePages: [src.url],
+      program: title.slice(0, 80), callCode: 'AUTO/' + src.host,
+      summary: b.body.trim().slice(0, 260) || title,
+      domains: domains.length ? domains : ['Antreprenoriat'],
+      beneficiaries: beneficiaries.length ? beneficiaries : ['IMM'],
+      regions,
+      grantMin: 0, grantMax: grantMax || 0, cofinancing: 0,
+      deadline: deadline || 'Nespecificat',
+      launchDate: new Date().toISOString().slice(0,10),
+      who: beneficiaries.join(', ') || 'Vezi ghidul oficial.',
+      activities: 'Extras automat — verifică sursa oficială.',
+      isUrgent: false, confidence: conf,
+      _auto: true, _extractedAt: new Date().toISOString(),
+    });
+  }
+  return out;
+}
+
+// Fingerprint for dedup: normalized title + host.
+function oppFingerprint(o) {
+  return (o.source + '|' + (o.title||'').toLowerCase().replace(/[^a-z0-9ăâîșț]+/g,' ').trim().slice(0,60));
+}
+
+// Persist extracted opps: high-confidence -> published KV set, rest -> review queue.
+const AUTOPUBLISH_THRESHOLD = 78;
+async function publishExtracted(extracted, env) {
+  if (!env.FINMATCH_KV || !extracted.length) return { published: 0, queued: 0 };
+  let pubMap = {}, revMap = {};
+  try { const p = await env.FINMATCH_KV.get('opps:published'); if (p) pubMap = JSON.parse(p); } catch(e){}
+  try { const r = await env.FINMATCH_KV.get('opps:review'); if (r) revMap = JSON.parse(r); } catch(e){}
+
+  // Existing fingerprints (seed + already stored) to avoid dupes.
+  const seen = new Set();
+  for (const o of API_OPPORTUNITIES) seen.add(oppFingerprint(o));
+  for (const o of Object.values(pubMap)) seen.add(oppFingerprint(o));
+  for (const o of Object.values(revMap)) seen.add(oppFingerprint(o));
+
+  let published = 0, queued = 0, nextId = 1000;
+  const allIds = [...Object.keys(pubMap), ...Object.keys(revMap)].map(Number).filter(n=>!isNaN(n));
+  if (allIds.length) nextId = Math.max(nextId, Math.max(...allIds) + 1);
+
+  for (const o of extracted) {
+    const fp = oppFingerprint(o);
+    if (seen.has(fp)) continue;
+    seen.add(fp);
+    o.id = nextId++;
+    o.status = 'ACTIV';
+    if (o.confidence >= AUTOPUBLISH_THRESHOLD) { pubMap[o.id] = o; published++; }
+    else { revMap[o.id] = o; queued++; }
+  }
+  try {
+    await env.FINMATCH_KV.put('opps:published', JSON.stringify(pubMap));
+    await env.FINMATCH_KV.put('opps:review', JSON.stringify(revMap));
+  } catch(e){}
+  return { published, queued };
+}
+
+async function crawlOne(src, env) {
+  const apiKey = env.FIRECRAWL_API_KEY;
+  if (!apiKey) return { host: src.host, status: 'err', error: 'FIRECRAWL_API_KEY nesetat' };
+  const r = await firecrawlScrape(src, apiKey);
+  const entry = {
+    status: r.ok ? 'ok' : 'err',
+    lastRun: new Date().toISOString(),
+    ms: r.ms || 0, pages: r.ok ? 1 : 0,
+    chars: r.markdown ? r.markdown.length : 0,
+    title: r.title || '', error: r.ok ? null : (r.error || 'Continut gol'),
+  };
+  if (r.ok && entry.chars < 400) entry.status = 'warn';
+  if (env.FINMATCH_KV) {
+    try {
+      if (r.ok && r.markdown) await env.FINMATCH_KV.put('src:raw:' + src.host, r.markdown, { expirationTtl: 1209600 });
+      if (r.ok && r.markdown) {
+        try {
+          const extracted = extractOpportunities(r.markdown, src);
+          const pub = await publishExtracted(extracted, env);
+          entry.extracted = extracted.length;
+          entry.published = pub.published;
+          entry.queued = pub.queued;
+        } catch (ex) { entry.extractError = String(ex && ex.message || ex); }
+      }
+      const raw = await env.FINMATCH_KV.get('src:status');
+      const map = raw ? JSON.parse(raw) : {};
+      map[src.host] = entry;
+      await env.FINMATCH_KV.put('src:status', JSON.stringify(map));
+    } catch (e) { entry.error = 'KV: ' + String(e && e.message || e); }
+  }
+  return { host: src.host, ...entry };
+}
+
+async function crawlAll(env) {
+  const results = [];
+  for (const src of CRAWL_SOURCES) results.push(await crawlOne(src, env));
+  if (env.FINMATCH_KV) { try { await env.FINMATCH_KV.put('src:lastFullRun', new Date().toISOString()); } catch (e) {} }
+  return results;
+}
+
+
+/* ═══ MATCHING AGENT — profile → ranked funding options ═══
+   Provider-agnostic (Anthropic default). Key via secret AI_API_KEY.
+   Optional: AI_PROVIDER ('anthropic'|'openai'), AI_MODEL override. */
+
+// Deterministic pre-filter: narrow the catalog to plausible candidates.
+function prefilterOpps(profile) {
+  const { orgType, domains = [], region, projectSize } = profile;
+  return API_OPPORTUNITIES.filter(o => {
+    if (o.status === 'ÎNCHIS') return false;
+    if (orgType && o.beneficiaries.length && !o.beneficiaries.includes(orgType)) return false;
+    if (region && region !== 'Oricare' && o.regions.length &&
+        !o.regions.includes(region) && !o.regions.includes('Național')) return false;
+    if (domains.length && !domains.some(d => o.domains.includes(d))) return false;
+    if (projectSize && Number(projectSize) > 0 && o.grantMax < Number(projectSize) * 0.3) return false;
+    return true;
+  });
+}
+
+// Rule-based scoring — used as fallback and to seed the model.
+function ruleScore(o, profile) {
+  let s = 0;
+  const domains = profile.domains || [];
+  if (profile.orgType && o.beneficiaries.includes(profile.orgType)) s += 30;
+  const dm = o.domains.filter(d => domains.includes(d)).length;
+  s += Math.min(dm * 20, 40);
+  if (profile.region && (o.regions.includes(profile.region) || o.regions.includes('Național'))) s += 15;
+  if (o.status === 'ACTIV') s += 10;
+  if (profile.projectSize > 0 && o.grantMax >= profile.projectSize) s += 5;
+  return Math.min(s, 100);
+}
+
+function ruleRank(profile) {
+  const cands = prefilterOpps(profile);
+  return cands
+    .map(o => ({ id: o.id, score: ruleScore(o, profile), reason: 'Potrivire pe tip beneficiar, domeniu și regiune.' }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+}
+
+// Call the LLM to rank candidates and explain fit. Returns [{id, score, reason}].
+async function aiRank(profile, candidates, env) {
+  const provider = (env.AI_PROVIDER || 'anthropic').toLowerCase();
+  const key = env.AI_API_KEY;
+  if (!key || !candidates.length) return null;
+
+  const slim = candidates.map(o => ({
+    id: o.id, program: o.program, status: o.status,
+    domains: o.domains, beneficiaries: o.beneficiaries, regions: o.regions,
+    grantMin: o.grantMin, grantMax: o.grantMax, cofinancing: o.cofinancing,
+    summary: (o.summary || '').slice(0, 240),
+  }));
+
+  const sys = 'Ești consultant de finanțări din România. Primești profilul unui aplicant și o listă de programe de finanțare (candidate). '
+    + 'Clasifică programele de la cel mai potrivit la cel mai puțin potrivit pentru acest aplicant. '
+    + 'Răspunde DOAR cu JSON valid, fără markdown, de forma: '
+    + '{"matches":[{"id":<number>,"score":<0-100>,"reason":"<o singură propoziție în română, max 20 cuvinte>"}]}. '
+    + 'Include doar programe relevante (score >= 40). Ordonează descrescător după score.';
+
+  const userMsg = 'PROFIL APLICANT:\n' + JSON.stringify(profile)
+    + '\n\nPROGRAME CANDIDATE:\n' + JSON.stringify(slim)
+    + '\n\nReturnează clasamentul ca JSON.';
+
+  try {
+    let text = '';
+    if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: env.AI_MODEL || 'gpt-4o-mini',
+          messages: [{ role: 'system', content: sys }, { role: 'user', content: userMsg }],
+          temperature: 0.2, max_tokens: 900,
+          response_format: { type: 'json_object' },
+        }),
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      text = j.choices && j.choices[0] && j.choices[0].message ? j.choices[0].message.content : '';
+    } else {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: env.AI_MODEL || 'claude-sonnet-4-6',
+          max_tokens: 900,
+          system: sys,
+          messages: [{ role: 'user', content: userMsg }],
+        }),
+      });
+      if (!res.ok) return null;
+      const j = await res.json();
+      text = (j.content && j.content[0] && j.content[0].text) ? j.content[0].text : '';
+    }
+    // Strip any stray markdown fences, then parse.
+    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    const parsed = JSON.parse(text);
+    const arr = Array.isArray(parsed) ? parsed : parsed.matches;
+    if (!Array.isArray(arr)) return null;
+    const valid = new Set(candidates.map(o => o.id));
+    return arr
+      .filter(m => valid.has(m.id))
+      .map(m => ({ id: m.id, score: Math.max(0, Math.min(100, Number(m.score) || 0)), reason: String(m.reason || '').slice(0, 160) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Orchestrator: prefilter → AI rank (fallback to rules) → hydrate full opp objects.
+async function matchProfile(profile, env) {
+  const candidates = prefilterOpps(profile);
+  let ranked = await aiRank(profile, candidates, env);
+  let usedAI = true;
+  if (!ranked || !ranked.length) { ranked = ruleRank(profile); usedAI = false; }
+  const byId = Object.fromEntries(API_OPPORTUNITIES.map(o => [o.id, o]));
+  const results = ranked
+    .map(r => ({ ...r, opp: byId[r.id] }))
+    .filter(r => r.opp);
+  return { usedAI, count: results.length, results };
+}
+
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(crawlAll(env));
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const { pathname } = url;
@@ -2267,11 +2902,82 @@ export default {
 
     if (pathname === '/api/stats') {
       const active = API_OPPORTUNITIES.filter(o => o.status === 'ACTIV').length;
-      return jsonResp({ total: API_OPPORTUNITIES.length, active, sources: 10 });
+      return jsonResp({ total: API_OPPORTUNITIES.length, active, sources: 11 });
     }
 
     if (pathname === '/api/waitlist') {
       return jsonResp({ ok: true, message: 'Înscris pe lista de așteptare!' });
+    }
+
+    if (pathname === '/api/sources') {
+      let map = {}, lastFullRun = null;
+      if (env.FINMATCH_KV) {
+        try {
+          const raw = await env.FINMATCH_KV.get('src:status');
+          if (raw) map = JSON.parse(raw);
+          lastFullRun = await env.FINMATCH_KV.get('src:lastFullRun');
+        } catch (e) {}
+      }
+      return jsonResp({ sources: map, lastFullRun, registry: CRAWL_SOURCES.map(s => ({ host: s.host, url: s.url, tier: s.tier })) });
+    }
+
+    if (pathname === '/api/match') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      let profile;
+      try { profile = await request.json(); }
+      catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
+      profile.projectSize = Number(profile.projectSize) || 0;
+      profile.domains = Array.isArray(profile.domains) ? profile.domains : [];
+      const out = await matchProfile(profile, env);
+      return jsonResp(out);
+    }
+
+    // Merged catalog: seed + auto-published crawl results
+    if (pathname === '/api/opportunities') {
+      let pub = {};
+      if (env.FINMATCH_KV) { try { const p = await env.FINMATCH_KV.get('opps:published'); if (p) pub = JSON.parse(p); } catch(e){} }
+      const published = Object.values(pub);
+      return jsonResp({ seed: API_OPPORTUNITIES.length, published: published.length, opportunities: published });
+    }
+
+    // Review queue (pending auto-extracted, below auto-publish threshold)
+    if (pathname === '/api/review') {
+      let rev = {};
+      if (env.FINMATCH_KV) { try { const r = await env.FINMATCH_KV.get('opps:review'); if (r) rev = JSON.parse(r); } catch(e){} }
+      return jsonResp({ count: Object.keys(rev).length, items: Object.values(rev) });
+    }
+
+    // Approve/reject a queued item.  POST /api/review/approve?id=  |  /reject?id=
+    if (pathname === '/api/review/approve' || pathname === '/api/review/reject') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      const id = url.searchParams.get('id');
+      if (!id || !env.FINMATCH_KV) return jsonResp({ error: 'id lipsă sau KV indisponibil' }, 400);
+      let rev = {}, pub = {};
+      try { const r = await env.FINMATCH_KV.get('opps:review'); if (r) rev = JSON.parse(r); } catch(e){}
+      const item = rev[id];
+      if (!item) return jsonResp({ error: 'Element inexistent' }, 404);
+      delete rev[id];
+      if (pathname.endsWith('approve')) {
+        try { const p = await env.FINMATCH_KV.get('opps:published'); if (p) pub = JSON.parse(p); } catch(e){}
+        item.status = 'ACTIV';
+        pub[id] = item;
+        await env.FINMATCH_KV.put('opps:published', JSON.stringify(pub));
+      }
+      await env.FINMATCH_KV.put('opps:review', JSON.stringify(rev));
+      return jsonResp({ ok: true, action: pathname.endsWith('approve') ? 'approved' : 'rejected', id });
+    }
+
+    if (pathname === '/api/recrawl') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      const host = url.searchParams.get('host');
+      if (host) {
+        const src = CRAWL_SOURCES.find(s => s.host === host);
+        if (!src) return jsonResp({ error: 'Sursa necunoscuta: ' + host }, 404);
+        const result = await crawlOne(src, env);
+        return jsonResp({ ok: result.status !== 'err', result });
+      }
+      ctx.waitUntil(crawlAll(env));
+      return jsonResp({ ok: true, message: 'Re-crawl pornit', count: CRAWL_SOURCES.length });
     }
 
     return new Response(HTML, {
