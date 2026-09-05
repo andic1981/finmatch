@@ -3,6 +3,19 @@
   "main": "src/worker.js",
   "compatibility_date": "2024-11-01",
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "AI_PROVIDER": "anthropic",
+    "AI_MODEL": "claude-sonnet-4-6"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "FINMATCH_KV",
+      "id": "8744b18f2c244f23a1fc7f2d842b0947"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "0 5 * * *"
+    ]
   }
 }
