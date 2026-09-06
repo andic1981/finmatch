@@ -6,6 +6,9 @@ compatibility_date = "2024-11-01"
 ENVIRONMENT = "production"
 AI_PROVIDER = "anthropic"
 AI_MODEL = "claude-sonnet-4-6"
+ALERT_FROM = "FinMatch <onboarding@resend.dev>"
+PUBLIC_URL = "https://finmatch.workers.dev"
+# Secret (set separately): npx wrangler secret put RESEND_API_KEY
 # Secret (set separately): npx wrangler secret put AI_API_KEY
 
 # KV for crawl results & source status
