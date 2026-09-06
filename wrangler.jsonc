@@ -5,7 +5,9 @@
   "vars": {
     "ENVIRONMENT": "production",
     "AI_PROVIDER": "anthropic",
-    "AI_MODEL": "claude-sonnet-4-6"
+    "AI_MODEL": "claude-sonnet-4-6",
+    "ALERT_FROM": "FinMatch <onboarding@resend.dev>",
+    "PUBLIC_URL": "https://finmatch.workers.dev"
   },
   "kv_namespaces": [
     {
