@@ -12,36 +12,37 @@ const HTML = `<!DOCTYPE html>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f4f9f8;
+  --bg: #f5f7fc;
   --surface: #ffffff;
-  --surface2: #ecf4f3;
-  --ink: #1f2a28;
-  --ink2: #5a6764;
-  --ink3: #9aa8a4;
-  --accent: #17a06a;
-  --accent-light: #dcf5ea;
-  --accent-dark: #0f7d51;
-  --sky: #2ea6d8;
-  --sky-light: #e0f2fb;
-  --accent2: #2ea6d8;
-  --accent2-light: #e0f2fb;
-  --warn: #e0952e;
-  --warn-light: #fdf3e2;
-  --border: rgba(31,42,40,0.10);
-  --border2: rgba(31,42,40,0.05);
+  --surface2: #eef2fa;
+  --ink: #0f172a;
+  --ink2: #475569;
+  --ink3: #94a3b8;
+  --accent: #2563eb;
+  --accent-light: #e3ecff;
+  --accent-dark: #1d4ed8;
+  --sky: #06b6d4;
+  --sky-light: #dff7fb;
+  --accent2: #f97316;
+  --accent2-light: #fff1e6;
+  --warn: #d97706;
+  --warn-light: #fef3e2;
+  --border: rgba(15,23,42,0.09);
+  --border2: rgba(15,23,42,0.05);
   --radius: 14px;
   --radius-lg: 22px;
   --font-head: 'Space Grotesk', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
-  --shadow: 0 3px 8px rgba(23,120,90,0.06), 0 16px 40px rgba(23,120,90,0.10);
-  --shadow-sm: 0 1px 3px rgba(23,120,90,0.05), 0 4px 12px rgba(23,120,90,0.06);
+  --shadow: 0 3px 8px rgba(37,99,235,0.06), 0 18px 44px rgba(37,99,235,0.10);
+  --shadow-sm: 0 1px 3px rgba(37,99,235,0.05), 0 4px 14px rgba(37,99,235,0.06);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
   font-family: var(--font-body);
-  background: linear-gradient(180deg, #eef7f9 0%, var(--bg) 340px, var(--bg) 100%);
+  background: radial-gradient(1100px 520px at 12% -10%, rgba(37,99,235,0.10), transparent 60%), radial-gradient(900px 480px at 92% -5%, rgba(6,182,212,0.10), transparent 60%), var(--bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-size: 14px;
   line-height: 1.6;
@@ -54,7 +55,7 @@ button { font-family: var(--font-body); }
 
 /* ── NAV ── */
 nav {
-  background: rgba(247,246,241,0.92);
+  background: rgba(245,247,252,0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--border);
@@ -83,6 +84,7 @@ nav {
 .logo-dot {
   width: 22px; height: 22px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 100%);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.35);
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
@@ -121,7 +123,8 @@ nav {
 .nav-links a.active { background: var(--surface2); color: var(--ink); font-weight: 500; }
 
 .nav-cta {
-  background: var(--accent) !important;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 130%) !important;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.28);
   color: #fff !important;
   font-weight: 500 !important;
   margin-left: 6px;
@@ -147,7 +150,7 @@ nav {
   padding: 5px 14px;
   border-radius: 100px;
   margin-bottom: 1.75rem;
-  border: 1px solid rgba(26,92,56,0.16);
+  border: 1px solid rgba(37,99,235,0.16);
   letter-spacing: 0.1px;
 }
 
@@ -159,7 +162,7 @@ nav {
   letter-spacing: -1px;
   margin-bottom: 1.25rem;
 }
-.hero h1 em { font-style: normal; color: var(--accent); background: linear-gradient(120deg, transparent 60%, var(--sky-light) 60%); padding: 0 2px; }
+.hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 .hero > p {
   font-size: 16px;
@@ -184,7 +187,7 @@ nav {
 }
 .search-bar:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(26,92,56,0.10), var(--shadow);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.14), var(--shadow);
 }
 
 .search-icon {
@@ -211,7 +214,7 @@ nav {
 .search-btn {
   margin: 5px;
   padding: 9px 22px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--sky) 130%);
   color: #fff;
   border: none;
   border-radius: 13px;
@@ -267,6 +270,7 @@ nav {
 .stat { flex: 1; text-align: center; padding: 1rem 1.1rem; background: var(--surface); }
 
 .stat-num {
+  background: linear-gradient(90deg, var(--accent), var(--sky)); -webkit-background-clip: text; background-clip: text; color: transparent;
   font-family: var(--font-head);
   font-size: 1.3rem;
   font-weight: 700;
@@ -418,7 +422,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   box-shadow: var(--shadow-sm);
 }
 .opp-card:hover {
-  border-color: rgba(26,92,56,0.28);
+  border-color: rgba(37,99,235,0.35);
   box-shadow: var(--shadow);
   transform: translateY(-1px);
 }
@@ -443,9 +447,9 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   letter-spacing: 0.4px;
   text-transform: uppercase;
 }
-.status-badge.active { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(26,92,56,0.2); }
+.status-badge.active { background: var(--accent-light); color: var(--accent); border: 1px solid rgba(37,99,235,0.2); }
 .status-badge.active::before { content: ''; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; }
-.status-badge.upcoming { background: var(--warn-light); color: var(--warn); border: 1px solid rgba(169,122,0,0.22); }
+.status-badge.upcoming { background: var(--warn-light); color: var(--warn); border: 1px solid rgba(217,119,6,0.22); }
 .status-badge.closed { background: var(--surface2); color: var(--ink3); border: 1px solid var(--border); }
 
 .source-tier {
@@ -468,7 +472,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   flex-shrink: 0;
   background: var(--accent2-light);
   color: var(--accent2);
-  border: 1px solid rgba(200,80,13,0.2);
+  border: 1px solid rgba(249,115,22,0.2);
 }
 
 .warn {
@@ -479,7 +483,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   flex-shrink: 0;
   background: var(--warn-light);
   color: var(--warn);
-  border: 1px solid rgba(169,122,0,0.2);
+  border: 1px solid rgba(217,119,6,0.2);
 }
 
 .opp-title {
@@ -536,7 +540,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   background: var(--surface2);
   color: var(--ink2);
 }
-.meta-tag.domain { background: var(--sky-light); color: #1c6f95; }
+.meta-tag.domain { background: var(--sky-light); color: #0e7490; }
 .meta-tag.region { background: var(--accent-light); color: var(--accent); }
 
 .opp-footer {
@@ -602,20 +606,20 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   font-weight: 500;
   color: var(--accent);
   background: var(--accent-light);
-  border: 1px solid rgba(26,92,56,0.2);
+  border: 1px solid rgba(37,99,235,0.2);
   padding: 5px 13px;
   border-radius: 7px;
   cursor: pointer;
   transition: background 0.12s;
   white-space: nowrap;
 }
-.btn-detail:hover { background: #c9efdd; }
+.btn-detail:hover { background: #d3e0ff; }
 
 /* ── MODAL ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(25,23,17,0.45);
+  background: rgba(15,23,42,0.45);
   z-index: 200;
   display: flex;
   align-items: flex-start;
@@ -637,7 +641,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   width: 100%;
   margin-top: 20px;
   overflow: hidden;
-  box-shadow: 0 6px 12px rgba(25,23,17,0.10), 0 24px 64px rgba(25,23,17,0.14);
+  box-shadow: 0 6px 12px rgba(15,23,42,0.10), 0 24px 64px rgba(15,23,42,0.14);
   transform: translateY(12px);
   transition: transform 0.2s;
   border: 1px solid var(--border);
@@ -706,7 +710,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   gap: 5px;
   font-size: 12px;
   color: var(--accent);
-  border: 1px solid rgba(26,92,56,0.2);
+  border: 1px solid rgba(37,99,235,0.2);
   background: var(--accent-light);
   padding: 6px 12px;
   border-radius: var(--radius);
@@ -714,11 +718,11 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   margin-bottom: 6px;
   transition: background 0.1s;
 }
-.source-link:hover { background: #c9efdd; }
+.source-link:hover { background: #d3e0ff; }
 
 .disclaimer {
   background: var(--warn-light);
-  border: 1px solid rgba(169,122,0,0.18);
+  border: 1px solid rgba(217,119,6,0.18);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   font-size: 12px;
@@ -731,7 +735,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 .compare-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(25,23,17,0.5);
+  background: rgba(15,23,42,0.5);
   z-index: 300;
   display: flex;
   align-items: flex-start;
@@ -753,7 +757,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   width: 100%;
   margin-top: 16px;
   overflow: hidden;
-  box-shadow: 0 6px 12px rgba(25,23,17,0.10), 0 24px 64px rgba(25,23,17,0.14);
+  box-shadow: 0 6px 12px rgba(15,23,42,0.10), 0 24px 64px rgba(15,23,42,0.14);
   border: 1px solid var(--border);
   transform: translateY(10px);
   transition: transform 0.2s;
@@ -832,7 +836,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
   opacity: 0;
   transition: all 0.2s;
   pointer-events: none;
-  box-shadow: 0 8px 32px rgba(25,23,17,0.25);
+  box-shadow: 0 8px 32px rgba(15,23,42,0.25);
   max-width: 300px;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
@@ -850,7 +854,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
 /* ── SKELETON ── */
 .skeleton {
-  background: linear-gradient(90deg, var(--surface2) 25%, #e5e1d8 50%, var(--surface2) 75%);
+  background: linear-gradient(90deg, var(--surface2) 25%, #e2e8f0 50%, var(--surface2) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
   border-radius: var(--radius);
@@ -859,7 +863,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
 
 /* ── FOOTER ── */
 footer {
-  background: var(--ink);
+  background: linear-gradient(180deg, #0f172a, #111c3a);
   color: rgba(255,255,255,0.35);
   text-align: center;
   padding: 1.5rem 2rem;
@@ -912,7 +916,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   transition: border-color .15s, box-shadow .15s;
 }
 .m-prompt::placeholder { color: var(--ink3); font-weight: 300; }
-.m-prompt:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,56,.10); }
+.m-prompt:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,.10); }
 .m-example {
   font-size: 11.5px;
   color: var(--ink2);
@@ -924,7 +928,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   font-family: var(--font-body);
   transition: all .12s;
 }
-.m-example:hover { background: var(--accent-light); color: var(--accent); border-color: rgba(26,92,56,.25); }
+.m-example:hover { background: var(--accent-light); color: var(--accent); border-color: rgba(37,99,235,.25); }
 @media (max-width: 768px) {
   #view-match [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
 }
@@ -1199,7 +1203,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap;">
         <span style="font-size:11px;color:var(--ink3);">Ctrl/⌘ + Enter pentru a rula</span>
-        <button onclick="runMatch()" id="m-btn" style="padding:11px 26px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;box-shadow:var(--shadow-sm);">
+        <button onclick="runMatch()" id="m-btn" style="padding:11px 26px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;box-shadow:var(--shadow-sm);">
           ✨ Găsește potrivirile
         </button>
       </div>
@@ -1304,7 +1308,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
             <option>Altele</option>
           </select>
         </div>
-        <button onclick="submitWaitlist()" style="margin-top:4px;padding:12px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#13452a'" onmouseout="this.style.background='var(--accent)'">
+        <button onclick="submitWaitlist()" style="margin-top:4px;padding:12px;background:var(--accent);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='var(--accent)'">
           Înscrie-te pe lista de așteptare →
         </button>
         <p style="font-size:11px;color:var(--ink3);text-align:center;font-weight:300;">Fără spam. Poți anula oricând.</p>
@@ -1886,7 +1890,7 @@ function renderResults() {
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:7px;">
             <span class="status-badge \${o.status==='ACTIV'?'active':o.status==='URMEAZĂ'?'upcoming':'closed'}">\${o.status}</span>
             <span class="source-tier \${o.sourceTier===1?'tier1':''}">\${o.sourceTier===1?'Tier 1 Oficial':'Editorial'}</span>
-            \${o.isUrgent ? '<span style="font-size:11px;background:#fff3e0;color:#c26a00;padding:3px 8px;border-radius:100px;font-weight:500;">⏰ Termen aproape</span>' : ''}
+            \${o.isUrgent ? '<span style="font-size:11px;background:#fff1e6;color:#c2410c;padding:3px 8px;border-radius:100px;font-weight:500;">⏰ Termen aproape</span>' : ''}
             \${(o.confidence||100) < 75 ? '<span style="font-size:11px;background:var(--warn-light);color:var(--warn);padding:3px 8px;border-radius:100px;">! Necesită verificare</span>' : ''}
           </div>
           <div class="opp-title">\${o.title}</div>
@@ -2257,7 +2261,7 @@ function switchAdminTab(tab, btn) {
       const published = (pubj.opportunities || []);
       const pubHtml = '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;">'
         + '<div style="font-size:12px;color:var(--ink3);"><strong style="color:var(--ink);">' + published.length + '</strong> publicate automat (confidence \u2265 78)</div>'
-        + (published.length ? '<button onclick="purgeAuto(this)" style="font-size:11px;background:var(--accent2-light);color:var(--accent2);border:1px solid rgba(200,80,13,.25);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Retrage toate auto-publicate</button>' : '')
+        + (published.length ? '<button onclick="purgeAuto(this)" style="font-size:11px;background:var(--accent2-light);color:var(--accent2);border:1px solid rgba(249,115,22,.25);padding:4px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Retrage toate auto-publicate</button>' : '')
         + '</div>'
         + published.map(function(o){
           return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem 1rem;margin-bottom:6px;display:flex;align-items:center;gap:10px;">'
@@ -2461,7 +2465,7 @@ function renderMatchResults(data) {
     return;
   }
   const badge = data.usedAI
-    ? '<span style="font-size:11px;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:100px;border:1px solid rgba(26,92,56,.2);">✨ Clasat de AI</span>'
+    ? '<span style="font-size:11px;color:var(--accent);background:var(--accent-light);padding:3px 10px;border-radius:100px;border:1px solid rgba(37,99,235,.2);">✨ Clasat de AI</span>'
     : '<span style="font-size:11px;color:var(--ink3);background:var(--surface2);padding:3px 10px;border-radius:100px;">Clasat pe reguli</span>';
   const head = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">' +
     '<div style="font-size:13px;color:var(--ink2);"><strong>' + data.results.length + '</strong> potriviri</div>' + badge + '</div>';
