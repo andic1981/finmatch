@@ -978,7 +978,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
     <li><a onclick="showView('alerts')">Alerte</a></li>
     <li><a onclick="showView('sources')">Surse</a></li>
     <li><a onclick="showView('admin')">Admin</a></li>
-    <li><a class="nav-cta" onclick="openWaitlist()">Lista de așteptare</a></li>
+    <li><a class="nav-cta" id="nav-auth" onclick="openAuth()">Intră în cont</a></li>
   </ul>
 </nav>
 
@@ -1159,7 +1159,16 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
     <p style="color:var(--ink2);font-size:14px;font-weight:300;max-width:540px;margin:0 auto;">Cu cât descrii mai concret ce vrei să faci, cu atât potrivirile și explicațiile sunt mai bune.</p>
   </div>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:1.5rem;">
+  <div id="m-gate" style="display:none;background:var(--surface);border:1.5px solid rgba(37,99,235,.25);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:1.5rem;margin-bottom:1.25rem;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">🔒</div>
+    <div style="flex:1;min-width:220px;">
+      <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;margin-bottom:3px;">Potrivirea AI necesită un cont gratuit</div>
+      <div style="font-size:13px;color:var(--ink2);font-weight:300;line-height:1.5;">Fără parolă — un link pe email și ești înăuntru. Contul îți păstrează și alertele.</div>
+    </div>
+    <button onclick="openAuth('match')" style="padding:10px 20px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;">Creează cont / Intră →</button>
+  </div>
+
+  <div id="m-form" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:1.5rem;transition:opacity .2s,filter .2s;">
 
     <!-- PROMPT: the primary input -->
     <div style="padding:1.25rem 1.5rem 0.75rem;">
@@ -1358,6 +1367,46 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
           Înscrie-te pe lista de așteptare →
         </button>
         <p style="font-size:11px;color:var(--ink3);text-align:center;font-weight:300;">Fără spam. Poți anula oricând.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-overlay" onclick="closeAuth(event)">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeAuth()">×</button>
+      <div style="display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;margin-bottom:10px;letter-spacing:.3px;text-transform:uppercase;">Cont FinMatch</div>
+      <h2 style="font-family:var(--font-head);font-size:1.2rem;font-weight:700;letter-spacing:-.3px;margin-bottom:5px;" id="auth-title">Intră sau creează cont</h2>
+      <p style="font-size:13px;color:var(--ink2);font-weight:300;" id="auth-sub">Fără parolă. Îți trimitem un link pe email — un click și ești înăuntru.</p>
+    </div>
+    <div class="modal-body" id="auth-body">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <label class="wl-label">Email</label>
+          <input type="email" id="auth-email" class="wl-input" placeholder="email@exemplu.ro" autocomplete="email">
+        </div>
+        <div id="auth-extra" style="display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label class="wl-label">Nume <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3);">(opțional)</span></label>
+            <input type="text" id="auth-name" class="wl-input" placeholder="Numele tău" autocomplete="name">
+          </div>
+          <div>
+            <label class="wl-label">Tip organizație <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3);">(opțional)</span></label>
+            <select id="auth-org" class="wl-input" style="cursor:pointer;">
+              <option value="">Selectează...</option>
+              <option>IMM / Startup</option>
+              <option>ONG</option>
+              <option>UAT / Instituție publică</option>
+              <option>Consultant fonduri europene</option>
+              <option>Fermier / Agricultură</option>
+              <option>Altele</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="requestLogin()" id="auth-btn" style="margin-top:4px;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;">Trimite-mi linkul de acces →</button>
+        <p style="font-size:11px;color:var(--ink3);text-align:center;font-weight:300;">Prin continuare accepți că îți stocăm emailul pentru autentificare și alerte. Fără spam.</p>
       </div>
     </div>
   </div>
@@ -1833,6 +1882,7 @@ function init() {
   renderResults();
   renderClosingStrip();
   loadPublished();
+  checkAuth();
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') doSearch();
   });
@@ -2557,7 +2607,7 @@ document.addEventListener('keydown', function(e) {
 let mDomains = new Set();
 
 function initMatch() {
-  // no-op init; keeps state between visits
+  renderAuthState();
 }
 
 function mToggleDomain(btn) {
@@ -2576,6 +2626,7 @@ async function runMatch() {
     projectSize: Number(document.getElementById('m-size').value) || 0,
     description: document.getElementById('m-desc').value.trim(),
   };
+  if (!currentUser) { openAuth('match'); return; }
   if (!profile.description && !profile.domains.length && !profile.orgType) { showToast('Descrie proiectul sau alege m\u0103car un domeniu'); return; }
   btn.disabled = true; btn.textContent = '\u2728 Se analizeaz\u0103...';
   box.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' +
@@ -2584,9 +2635,11 @@ async function runMatch() {
     const r = await fetch('/api/match', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
       body: JSON.stringify(profile),
     });
     const j = await r.json();
+    if (r.status === 401) { box.innerHTML = ''; currentUser = null; renderAuthState(); openAuth('match'); return; }
     renderMatchResults(j);
   } catch (e) {
     box.innerHTML = '<div class="empty-state"><h3>Eroare</h3><p>Nu am putut rula potrivirea. Încearcă din nou.</p></div>';
@@ -2841,6 +2894,124 @@ async function removeSource(host, btn) {
   } catch(e) { showToast('✗ Eroare rețea'); if (btn) btn.disabled = false; }
 }
 
+/* ── Auth (client) ── */
+let currentUser = null;
+
+async function checkAuth() {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (r.ok) { const j = await r.json(); currentUser = j.user || null; }
+    else currentUser = null;
+  } catch(e) { currentUser = null; }
+  renderAuthState();
+  return currentUser;
+}
+
+function renderAuthState() {
+  const cta = document.getElementById('nav-auth');
+  if (cta) {
+    if (currentUser) {
+      const label = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email.split('@')[0];
+      cta.textContent = '👤 ' + label;
+      cta.setAttribute('onclick', 'openAccountMenu()');
+      cta.title = currentUser.email + ' — click pentru a ieși';
+    } else {
+      cta.textContent = 'Intră în cont';
+      cta.setAttribute('onclick', 'openAuth()');
+      cta.title = '';
+    }
+  }
+  // Gate on the match view
+  const gate = document.getElementById('m-gate');
+  const form = document.getElementById('m-form');
+  if (gate && form) {
+    gate.style.display = currentUser ? 'none' : 'flex';
+    form.style.opacity = currentUser ? '1' : '.45';
+    form.style.pointerEvents = currentUser ? 'auto' : 'none';
+    form.style.filter = currentUser ? 'none' : 'blur(1.5px)';
+  }
+}
+
+function openAuth(reason) {
+  const t = document.getElementById('auth-title'), s = document.getElementById('auth-sub');
+  if (reason === 'match') {
+    t.textContent = 'Creează-ți un cont gratuit';
+    s.textContent = 'Potrivirea AI e disponibilă cu cont. Fără parolă — primești un link pe email.';
+  } else {
+    t.textContent = 'Intră sau creează cont';
+    s.textContent = 'Fără parolă. Îți trimitem un link pe email — un click și ești înăuntru.';
+  }
+  document.getElementById('auth-body').style.display = '';
+  const done = document.getElementById('auth-done'); if (done) done.remove();
+  try { const e = localStorage.getItem('fm_email'); const el = document.getElementById('auth-email'); if (e && el && !el.value) el.value = e; } catch(x) {}
+  document.getElementById('auth-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => { const el = document.getElementById('auth-email'); if (el) el.focus(); }, 60);
+}
+function closeAuth(e) {
+  if (e && e.target !== document.getElementById('auth-overlay')) return;
+  document.getElementById('auth-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function requestLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const name = document.getElementById('auth-name').value.trim();
+  const org = document.getElementById('auth-org').value;
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) return showToast('Email invalid');
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.textContent = 'Se trimite…';
+  try { localStorage.setItem('fm_email', email); } catch(e) {}
+  try {
+    const r = await fetch('/api/auth/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ email, name, org }) });
+    const j = await r.json();
+    if (!j.ok) { showToast('✗ ' + (j.error || 'Eroare')); btn.disabled = false; btn.textContent = 'Trimite-mi linkul de acces →'; return; }
+    // Success state inside the modal
+    const body = document.getElementById('auth-body');
+    body.style.display = 'none';
+    const done = document.createElement('div');
+    done.id = 'auth-done';
+    done.className = 'modal-body';
+    done.innerHTML = '<div style="text-align:center;padding:.5rem 0;">'
+      + '<div style="width:52px;height:52px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px;">✉️</div>'
+      + '<div style="font-family:var(--font-head);font-weight:700;font-size:1.05rem;margin-bottom:6px;">' + (j.sent ? 'Verifică emailul' : 'Emailul nu a putut fi trimis') + '</div>'
+      + '<div style="font-size:13px;color:var(--ink2);line-height:1.6;">' + (j.sent
+          ? ('Am trimis un link de acces la <strong>' + email + '</strong>.<br>Valabil 15 minute. Verifică și folderul Spam.')
+          : ('<span style="color:var(--accent2);">' + (j.error || 'Serviciul de email nu este configurat.') + '</span>'))
+      + '</div>'
+      + (j.devLink ? '<div style="margin-top:14px;font-size:11px;color:var(--ink3);">Mod dezvoltare — <a href="' + j.devLink + '" style="color:var(--accent);">deschide linkul aici</a></div>' : '')
+      + '<button onclick="closeAuth()" style="margin-top:18px;padding:9px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-body);font-size:13px;cursor:pointer;">Închide</button>'
+      + '</div>';
+    body.parentNode.appendChild(done);
+  } catch(e) { showToast('✗ Eroare rețea'); }
+  btn.disabled = false; btn.textContent = 'Trimite-mi linkul de acces →';
+}
+
+function openAccountMenu() {
+  if (!currentUser) return openAuth();
+  if (confirm('Ieși din cont (' + currentUser.email + ')?')) logout();
+}
+async function logout() {
+  try { await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }); } catch(e) {}
+  currentUser = null;
+  renderAuthState();
+  showToast('Ai ieșit din cont');
+}
+
+// Handle return from magic link: /?auth=ok#match
+(function handleAuthReturn() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('auth') === 'ok') {
+      history.replaceState(null, '', location.pathname + (location.hash || ''));
+      setTimeout(() => { showToast('✓ Ești autentificat'); if (location.hash === '#match') showView('match'); }, 300);
+    } else if (q.get('auth') === 'retry') {
+      history.replaceState(null, '', location.pathname);
+      setTimeout(() => openAuth(), 300);
+    }
+  } catch(e) {}
+})();
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2852,6 +3023,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeModal();
     closeCompare();
+    closeAuth();
   }
 });
 
@@ -3491,6 +3663,48 @@ async function sendDigests(env, baseUrl) {
   return { sent, errors };
 }
 
+
+/* ═══ AUTH — passwordless magic links, sessions in KV ═══
+   KV: auth:token:<t> (15 min) | auth:session:<sid> (30 days) | users:<email>
+   No passwords are ever stored. Login link is emailed via Resend.
+   Dev: set var DEV_LOGIN_ECHO="true" to get the link back in the API response
+        (ONLY for local testing; never in production). */
+
+function randToken(bytes) {
+  const a = new Uint8Array(bytes || 32); crypto.getRandomValues(a);
+  return Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
+}
+function parseCookies(request) {
+  const out = {};
+  const c = request.headers.get('Cookie') || '';
+  c.split(';').forEach(p => { const i = p.indexOf('='); if (i > 0) out[p.slice(0, i).trim()] = decodeURIComponent(p.slice(i + 1).trim()); });
+  return out;
+}
+async function getSession(request, env) {
+  if (!env.FINMATCH_KV) return null;
+  const sid = parseCookies(request).fm_session;
+  if (!sid) return null;
+  try {
+    const raw = await env.FINMATCH_KV.get('auth:session:' + sid);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    const u = await env.FINMATCH_KV.get('users:' + s.email);
+    return { sid, email: s.email, user: u ? JSON.parse(u) : { email: s.email } };
+  } catch (e) { return null; }
+}
+function sessionCookie(sid, maxAge) {
+  return 'fm_session=' + sid + '; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=' + (maxAge == null ? 2592000 : maxAge);
+}
+function loginEmailHtml(link, name) {
+  return '<div style="font-family:Inter,Arial,sans-serif;background:#f5f7fc;padding:24px;"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:28px;">'
+    + '<div style="font-weight:800;font-size:18px;color:#0f172a;margin-bottom:6px;">FinMatch Rom\u00e2nia</div>'
+    + '<p style="font-size:14px;color:#0f172a;">Salut' + (name ? ' ' + escapeHtml(name) : '') + ',</p>'
+    + '<p style="font-size:14px;color:#475569;line-height:1.6;">Apas\u0103 butonul de mai jos ca s\u0103 intri \u00een cont. Linkul e valabil 15 minute \u0219i poate fi folosit o singur\u0103 dat\u0103.</p>'
+    + '<p style="margin:22px 0;"><a href="' + link + '" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:600;">Intr\u0103 \u00een FinMatch \u2192</a></p>'
+    + '<p style="font-size:12px;color:#94a3b8;line-height:1.6;">Dac\u0103 nu ai cerut tu acest link, po\u021Bi ignora emailul.<br>Link direct: <a href="' + link + '" style="color:#94a3b8;">' + link + '</a></p>'
+    + '</div></div>';
+}
+
 export default {
   async scheduled(event, env, ctx) {
     const baseUrl = env.PUBLIC_URL || 'https://finmatch.workers.dev';
@@ -3554,8 +3768,63 @@ export default {
       return jsonResp({ sources: map, lastFullRun, registry: registry.map(s => ({ host: s.host, url: s.url, name: s.name || s.host, tier: s.tier, proxy: s.proxy || 'auto', builtin: !!s.builtin, enabled: s.enabled !== false })) });
     }
 
+    // ── Auth ──
+    // POST /api/auth/request {email, name?, org?} → sends magic link (creates account if new)
+    if (pathname === '/api/auth/request') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      if (!env.FINMATCH_KV) return jsonResp({ error: 'KV indisponibil' }, 500);
+      let b; try { b = await request.json(); } catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
+      const email = normEmail(b.email);
+      if (!isEmail(email)) return jsonResp({ error: 'Email invalid' }, 400);
+      // Rate limit: 1 link / 60s per email
+      const rlKey = 'auth:rl:' + email;
+      if (await env.FINMATCH_KV.get(rlKey)) return jsonResp({ error: 'Am trimis deja un link. Verific\u0103 emailul (\u0219i spam) sau re\u00eencearc\u0103 \u00een 1 minut.' }, 429);
+      await env.FINMATCH_KV.put(rlKey, '1', { expirationTtl: 60 });
+      // Upsert user
+      let user = null; try { const r = await env.FINMATCH_KV.get('users:' + email); if (r) user = JSON.parse(r); } catch (e) {}
+      const isNew = !user;
+      user = user || { email, createdAt: new Date().toISOString() };
+      if (b.name) user.name = String(b.name).trim().slice(0, 80);
+      if (b.org) user.org = String(b.org).trim().slice(0, 60);
+      await env.FINMATCH_KV.put('users:' + email, JSON.stringify(user));
+      // Token
+      const t = randToken(32);
+      await env.FINMATCH_KV.put('auth:token:' + t, JSON.stringify({ email, exp: Date.now() + 15 * 60000 }), { expirationTtl: 900 });
+      const link = url.origin + '/api/auth/verify?t=' + t;
+      const r = await sendEmail(env, email, isNew ? 'Bun venit la FinMatch \u2014 confirm\u0103 contul' : 'Linkul t\u0103u de autentificare FinMatch', loginEmailHtml(link, user.name));
+      const echo = env.DEV_LOGIN_ECHO === 'true';
+      return jsonResp({ ok: true, sent: r.ok, isNew, error: r.ok ? null : r.error, devLink: echo ? link : undefined });
+    }
+    // GET /api/auth/verify?t= → sets session cookie, redirects to app
+    if (pathname === '/api/auth/verify') {
+      const t = url.searchParams.get('t') || '';
+      const fail = (msg) => new Response('<html><body style="font-family:Inter,Arial;padding:40px;text-align:center;color:#0f172a;"><h2>Link invalid sau expirat</h2><p>' + msg + '</p><a href="' + url.origin + '/?auth=retry">Cere un link nou</a></body></html>', { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      if (!t || !env.FINMATCH_KV) return fail('Lipse\u0219te tokenul.');
+      let tok = null; try { const r = await env.FINMATCH_KV.get('auth:token:' + t); if (r) tok = JSON.parse(r); } catch (e) {}
+      if (!tok || tok.exp < Date.now()) return fail('Linkurile sunt valabile 15 minute \u0219i o singur\u0103 dat\u0103.');
+      await env.FINMATCH_KV.delete('auth:token:' + t);
+      const sid = randToken(32);
+      await env.FINMATCH_KV.put('auth:session:' + sid, JSON.stringify({ email: tok.email, created: new Date().toISOString(), ua: request.headers.get('User-Agent') || '' }), { expirationTtl: 2592000 });
+      try { const r = await env.FINMATCH_KV.get('users:' + tok.email); const u = r ? JSON.parse(r) : { email: tok.email }; u.lastLogin = new Date().toISOString(); await env.FINMATCH_KV.put('users:' + tok.email, JSON.stringify(u)); } catch (e) {}
+      return new Response(null, { status: 302, headers: { 'Location': url.origin + '/?auth=ok#match', 'Set-Cookie': sessionCookie(sid) } });
+    }
+    // GET /api/auth/me
+    if (pathname === '/api/auth/me') {
+      const s = await getSession(request, env);
+      return s ? jsonResp({ ok: true, user: { email: s.email, name: s.user.name || null, org: s.user.org || null } }) : jsonResp({ ok: false }, 401);
+    }
+    // POST /api/auth/logout
+    if (pathname === '/api/auth/logout') {
+      const s = await getSession(request, env);
+      if (s && env.FINMATCH_KV) { try { await env.FINMATCH_KV.delete('auth:session:' + s.sid); } catch (e) {} }
+      return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie('', 0), ...CORS } });
+    }
+
     if (pathname === '/api/match') {
       if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      // Gate: requires a signed-in user
+      const session = await getSession(request, env);
+      if (!session) return jsonResp({ error: 'auth', message: 'Autentificare necesar\u0103' }, 401);
       let profile;
       try { profile = await request.json(); }
       catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
