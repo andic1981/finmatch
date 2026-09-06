@@ -2261,6 +2261,15 @@ async function renderSources() {
     const l = live[h];
     merged[h] = l ? Object.assign({}, s, { status: l.status, lastRun: l.lastRun, chars: l.chars, error: l.error }) : s;
   }
+  // Custom sources added from Admin (not in the static SOURCES map)
+  try {
+    const rr = await fetch('/api/sources'); const jj = rr.ok ? await rr.json() : {};
+    for (const s of (jj.registry || [])) {
+      if (merged[s.host] || !s.enabled) continue;
+      const l = live[s.host] || {};
+      merged[s.host] = { name: s.name, tier: s.tier, status: l.status || 'warn', note: s.builtin ? 'Surs\u0103 monitorizat\u0103' : 'Ad\u0103ugat\u0103 manual din Admin', opps: (l.published||0), pages: [s.url], lastRun: l.lastRun, error: l.error };
+    }
+  } catch(e) {}
   const srcList = Object.entries(merged);
   const okCount = srcList.filter(([,s])=>s.status==='ok').length;
   const warnCount = srcList.filter(([,s])=>s.status==='warn').length;
@@ -2388,6 +2397,64 @@ function switchAdminTab(tab, btn) {
   }
 
   if (tab === 'sources') {
+    c.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p>Se încarcă sursele...</p></div>';
+    fetch('/api/sources').then(r => r.json()).then(function(j) {
+      const reg = (j.registry || []);
+      const live = j.sources || {};
+      const known = new Set(reg.map(s => s.host));
+      const suggestions = SOURCE_SUGGESTIONS.filter(s => !known.has(s.host));
+
+      const form = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.375rem;margin-bottom:1.25rem;box-shadow:var(--shadow-sm);">'
+        + '<div style="font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:10px;">+ Adaugă sursă nouă</div>'
+        + '<div style="display:grid;grid-template-columns:2fr 1.2fr;gap:10px;margin-bottom:10px;">'
+        + '<input id="src-url" class="wl-input" placeholder="https://exemplu.ro/apeluri (pagina cu lista de apeluri)">'
+        + '<input id="src-name" class="wl-input" placeholder="Nume afișat (opțional)">'
+        + '</div>'
+        + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'
+        + '<select id="src-tier" class="wl-input" style="width:auto;"><option value="1">Tier 1 — Oficială</option><option value="2" selected>Tier 2 — Instituție / regională</option><option value="3">Tier 3 — Editorială</option></select>'
+        + '<select id="src-proxy" class="wl-input" style="width:auto;"><option value="auto" selected>Proxy: auto</option><option value="stealth">Proxy: stealth (anti-bot)</option><option value="enhanced">Proxy: enhanced</option></select>'
+        + '<button id="src-add-btn" onclick="addSource()" style="margin-left:auto;padding:10px 18px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">Adaugă & crawlează</button>'
+        + '</div>'
+        + '<div style="font-size:11px;color:var(--ink3);margin-top:8px;">Sfat: folosește pagina care listează apelurile (nu homepage-ul). Sursa e crawl-ată imediat ca să vezi dacă e accesibilă.</div>'
+        + '</div>';
+
+      const quick = suggestions.length ? '<div style="margin-bottom:1.25rem;">'
+        + '<div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Surse recomandate — adaugă cu un click</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+        + suggestions.map(s => '<button class="quick-tag" title="' + s.url + '" onclick="quickAddSource(\\'' + s.url + '\\',\\'' + s.name.replace(/\\'/g, '') + '\\',' + s.tier + ',this)">+ ' + s.name + '</button>').join('')
+        + '</div></div>' : '';
+
+      const rows = reg.map(function(s) {
+        const l = live[s.host] || {};
+        const st = l.status || 'warn';
+        const stLabel = l.status ? (st === 'ok' ? 'OK' : st === 'warn' ? 'Avertisment' : 'Eroare') : 'Necrawlat';
+        const when = l.lastRun ? new Date(l.lastRun).toLocaleDateString('ro-RO') : '—';
+        const extra = (l.published || l.queued) ? (' · ' + (l.published||0) + ' publicate, ' + (l.queued||0) + ' review') : (l.chars ? ' · ' + l.chars + ' car.' : '');
+        return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;opacity:' + (s.enabled ? '1' : '.55') + ';">'
+          + '<div class="source-indicator ' + (s.enabled ? st : 'warn') + '"></div>'
+          + '<div style="flex:1;min-width:0;">'
+          + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><strong style="font-size:13px;">' + s.name + '</strong>'
+          + '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:1px 7px;border-radius:100px;">Tier ' + s.tier + '</span>'
+          + (s.builtin ? '' : '<span style="font-size:10px;background:var(--accent-light);color:var(--accent);padding:1px 7px;border-radius:100px;">manual</span>')
+          + (s.enabled ? '' : '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:1px 7px;border-radius:100px;">dezactivată</span>')
+          + '</div>'
+          + '<div style="font-size:11.5px;color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><a href="' + s.url + '" target="_blank" style="color:var(--ink3);">' + s.url.replace(/^https?:\\/\\//, '') + '</a></div>'
+          + '<div style="font-size:11px;color:var(--ink3);margin-top:2px;">' + stLabel + ' · ' + when + extra + (l.error ? ' · <span style="color:var(--accent2);">' + l.error + '</span>' : '') + '</div>'
+          + '</div>'
+          + '<div style="display:flex;gap:6px;flex-shrink:0;">'
+          + '<button onclick="recrawlSource(\\'' + s.host + '\\', this)" ' + (s.enabled ? '' : 'disabled ') + 'style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Re-crawl</button>'
+          + '<button onclick="toggleSource(\\'' + s.host + '\\', this)" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">' + (s.enabled ? 'Dezactivează' : 'Activează') + '</button>'
+          + (s.builtin ? '' : '<button onclick="removeSource(\\'' + s.host + '\\', this)" style="font-size:11px;background:var(--accent2-light);border:1px solid rgba(249,115,22,.25);color:var(--accent2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Șterge</button>')
+          + '</div></div>';
+      }).join('');
+
+      c.innerHTML = form + quick
+        + '<div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Surse monitorizate (' + reg.length + ')</div>'
+        + rows;
+    }).catch(function() { c.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>Eroare la încărcarea surselor.</p></div>'; });
+    return;
+  }
+  if (tab === '__old_sources__') {
     c.innerHTML = Object.entries(SOURCES).map(([id, s]) => \`
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
         <div class="source-indicator \${s.status}"></div>
@@ -2693,6 +2760,85 @@ function renderCalendar() {
       }).join('') + '</div>';
   }).join('')
   + (undated.length ? '<div style="font-size:12px;color:var(--ink3);margin-top:1rem;">' + undated.length + ' oportunități fără termen fix (estimate/„vezi portal”) nu apar în calendar.</div>' : '');
+}
+
+/* ── Source management ── */
+// Curated portals commonly missing. Point at the *calls listing* page where possible.
+const SOURCE_SUGGESTIONS = [
+  { host: 'adrnordvest.ro',       name: 'ADR Nord-Vest',              url: 'https://www.nord-vest.ro/apeluri/',                       tier: 1 },
+  { host: 'adrcentru.ro',         name: 'ADR Centru',                 url: 'https://www.adrcentru.ro/apeluri-de-proiecte/',           tier: 1 },
+  { host: 'adrmuntenia.ro',       name: 'ADR Sud-Muntenia',           url: 'https://www.adrmuntenia.ro/apeluri-proiecte/',             tier: 1 },
+  { host: 'adrse.ro',             name: 'ADR Sud-Est',                url: 'https://www.adrse.ro/apeluri/',                            tier: 1 },
+  { host: 'adroltenia.ro',        name: 'ADR Sud-Vest Oltenia',       url: 'https://www.adroltenia.ro/apeluri-de-proiecte/',           tier: 1 },
+  { host: 'adrbi.ro',             name: 'ADR București-Ilfov',        url: 'https://www.adrbi.ro/apeluri/',                            tier: 1 },
+  { host: 'afm.ro',               name: 'AFM — Administrația Fondului pentru Mediu', url: 'https://www.afm.ro/programe_finantare.php',   tier: 1 },
+  { host: 'fonduri-ue.ro',        name: 'Fonduri UE (MIPE)',          url: 'https://www.fonduri-ue.ro/apeluri',                        tier: 1 },
+  { host: 'imm.gov.ro',           name: 'Ministerul Economiei — IMM', url: 'https://imm.gov.ro/',                                      tier: 1 },
+  { host: 'uefiscdi.gov.ro',      name: 'UEFISCDI — Cercetare',       url: 'https://uefiscdi.gov.ro/competitii',                       tier: 1 },
+  { host: 'afcn.ro',              name: 'AFCN — Fondul Cultural',     url: 'https://www.afcn.ro/finantari',                            tier: 1 },
+  { host: 'madr.ro',              name: 'MADR — Agricultură',         url: 'https://www.madr.ro/dezvoltare-rurala.html',               tier: 1 },
+  { host: 'mmuncii.gov.ro',       name: 'Ministerul Muncii — PoEO',   url: 'https://mmuncii.gov.ro/j33/index.php/ro/',                 tier: 1 },
+  { host: 'anpm.ro',              name: 'ANPM',                       url: 'https://www.anpm.ro/',                                     tier: 2 },
+  { host: 'ec.europa.eu',         name: 'EU Funding & Tenders Portal', url: 'https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search', tier: 1 },
+  { host: 'eismea.ec.europa.eu',  name: 'EISMEA — IMM & Inovare',     url: 'https://eismea.ec.europa.eu/funding-opportunities_en',     tier: 1 },
+  { host: 'erasmus-plus.ec.europa.eu', name: 'Erasmus+',              url: 'https://erasmus-plus.ec.europa.eu/opportunities',          tier: 1 },
+  { host: 'anpcdefp.ro',          name: 'ANPCDEFP — Erasmus+ RO',     url: 'https://www.anpcdefp.ro/',                                 tier: 1 },
+  { host: 'interreg.ro',          name: 'Interreg România',           url: 'https://interreg.ro/',                                     tier: 1 },
+  { host: 'finantare.ro',         name: 'Finantare.ro',               url: 'https://www.finantare.ro/',                                tier: 3 },
+  { host: 'fondurieuropene.ro',   name: 'FonduriEuropene.ro',         url: 'https://www.fondurieuropene.ro/',                          tier: 3 },
+];
+
+async function addSource() {
+  const url = document.getElementById('src-url').value.trim();
+  const name = document.getElementById('src-name').value.trim();
+  const tier = document.getElementById('src-tier').value;
+  const proxy = document.getElementById('src-proxy').value;
+  if (!url) return showToast('Introdu URL-ul sursei');
+  const btn = document.getElementById('src-add-btn');
+  btn.disabled = true; btn.textContent = 'Se adaugă & crawlează…';
+  try {
+    const r = await fetch('/api/sources/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, name, tier, proxy }) });
+    const j = await r.json();
+    if (j.ok) {
+      const cr = j.crawl || {};
+      showToast('✓ ' + j.source.host + ' adăugată — ' + (cr.status ? cr.status.toUpperCase() : '?') + (cr.published || cr.queued ? (' · ' + (cr.published||0) + ' publicate, ' + (cr.queued||0) + ' review') : ''));
+      switchAdminTab('sources');
+    } else {
+      showToast('✗ ' + (j.error || 'Eroare'));
+      btn.disabled = false; btn.textContent = 'Adaugă & crawlează';
+    }
+  } catch(e) { showToast('✗ Eroare rețea'); btn.disabled = false; btn.textContent = 'Adaugă & crawlează'; }
+}
+
+async function quickAddSource(url, name, tier, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const r = await fetch('/api/sources/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, name, tier, proxy: 'auto' }) });
+    const j = await r.json();
+    if (j.ok) { const cr = j.crawl || {}; showToast('✓ ' + name + ' — ' + (cr.status ? cr.status.toUpperCase() : 'adăugată')); switchAdminTab('sources'); }
+    else { showToast('✗ ' + (j.error || 'Eroare')); if (btn) { btn.disabled = false; btn.textContent = '+ ' + name; } }
+  } catch(e) { showToast('✗ Eroare rețea'); if (btn) { btn.disabled = false; btn.textContent = '+ ' + name; } }
+}
+
+async function toggleSource(host, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch('/api/sources/toggle?host=' + encodeURIComponent(host), { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) { showToast(host + (j.enabled ? ' activată' : ' dezactivată')); switchAdminTab('sources'); }
+    else { showToast('✗ ' + (j.error || 'Eroare')); if (btn) btn.disabled = false; }
+  } catch(e) { showToast('✗ Eroare rețea'); if (btn) btn.disabled = false; }
+}
+
+async function removeSource(host, btn) {
+  if (!confirm('Ștergi sursa ' + host + '? Oportunitățile deja publicate rămân.')) return;
+  if (btn) btn.disabled = true;
+  try {
+    const r = await fetch('/api/sources/remove?host=' + encodeURIComponent(host), { method: 'POST' });
+    const j = await r.json();
+    if (j.ok) { showToast('Sursă ștearsă: ' + host); switchAdminTab('sources'); }
+    else { showToast('✗ ' + (j.error || 'Eroare')); if (btn) btn.disabled = false; }
+  } catch(e) { showToast('✗ Eroare rețea'); if (btn) btn.disabled = false; }
 }
 
 function showToast(msg) {
@@ -3072,9 +3218,36 @@ async function crawlOne(src, env) {
   return { host: src.host, ...entry };
 }
 
+// ── Dynamic source registry: built-in CRAWL_SOURCES + custom ones stored in KV ──
+// KV: sources:custom -> [ {host, url, name, tier, proxy, enabled, addedAt} ]
+async function getCustomSources(env) {
+  if (!env.FINMATCH_KV) return [];
+  try { const r = await env.FINMATCH_KV.get('sources:custom'); return r ? JSON.parse(r) : []; } catch (e) { return []; }
+}
+async function putCustomSources(env, list) {
+  if (!env.FINMATCH_KV) return;
+  try { await env.FINMATCH_KV.put('sources:custom', JSON.stringify(list)); } catch (e) {}
+}
+// Disabled built-ins are tracked separately so the code list stays the source of truth.
+async function getDisabledHosts(env) {
+  if (!env.FINMATCH_KV) return [];
+  try { const r = await env.FINMATCH_KV.get('sources:disabled'); return r ? JSON.parse(r) : []; } catch (e) { return []; }
+}
+async function getAllSources(env, includeDisabled) {
+  const custom = await getCustomSources(env);
+  const disabled = new Set(await getDisabledHosts(env));
+  const seen = new Set();
+  const out = [];
+  for (const s of CRAWL_SOURCES) { seen.add(s.host); out.push({ ...s, builtin: true, enabled: !disabled.has(s.host) }); }
+  for (const s of custom) { if (seen.has(s.host)) continue; seen.add(s.host); out.push({ ...s, builtin: false, enabled: s.enabled !== false }); }
+  return includeDisabled ? out : out.filter(s => s.enabled);
+}
+function hostFromUrl(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
+
 async function crawlAll(env) {
   const results = [];
-  for (const src of CRAWL_SOURCES) results.push(await crawlOne(src, env));
+  const sources = await getAllSources(env);
+  for (const src of sources) results.push(await crawlOne(src, env));
   if (env.FINMATCH_KV) { try { await env.FINMATCH_KV.put('src:lastFullRun', new Date().toISOString()); } catch (e) {} }
   return results;
 }
@@ -3377,7 +3550,8 @@ export default {
           lastFullRun = await env.FINMATCH_KV.get('src:lastFullRun');
         } catch (e) {}
       }
-      return jsonResp({ sources: map, lastFullRun, registry: CRAWL_SOURCES.map(s => ({ host: s.host, url: s.url, tier: s.tier })) });
+      const registry = await getAllSources(env, true);
+      return jsonResp({ sources: map, lastFullRun, registry: registry.map(s => ({ host: s.host, url: s.url, name: s.name || s.host, tier: s.tier, proxy: s.proxy || 'auto', builtin: !!s.builtin, enabled: s.enabled !== false })) });
     }
 
     if (pathname === '/api/match') {
@@ -3487,17 +3661,69 @@ export default {
       return jsonResp({ ok: true, ...r });
     }
 
+    // ── Source management ──
+    // POST /api/sources/add  {url, name?, tier?, proxy?}  → adds custom source (and crawls it once)
+    if (pathname === '/api/sources/add') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      let b; try { b = await request.json(); } catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
+      let u = String(b.url || '').trim();
+      if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+      const host = hostFromUrl(u);
+      if (!host || !host.includes('.')) return jsonResp({ error: 'URL invalid' }, 400);
+      const all = await getAllSources(env, true);
+      if (all.find(s => s.host === host)) return jsonResp({ error: 'Sursa exist\u0103 deja: ' + host }, 409);
+      const tier = [1, 2, 3].includes(Number(b.tier)) ? Number(b.tier) : 2;
+      const proxy = ['auto', 'basic', 'stealth', 'enhanced'].includes(b.proxy) ? b.proxy : 'auto';
+      const src = { host, url: u, name: String(b.name || host).trim().slice(0, 80), tier, proxy, enabled: true, addedAt: new Date().toISOString() };
+      const custom = await getCustomSources(env);
+      custom.push(src);
+      await putCustomSources(env, custom);
+      // Crawl right away so the user sees whether the site is reachable.
+      const result = b.crawlNow === false ? null : await crawlOne(src, env);
+      return jsonResp({ ok: true, source: src, crawl: result });
+    }
+    // POST /api/sources/remove?host=   (custom only)
+    if (pathname === '/api/sources/remove') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      const host = url.searchParams.get('host');
+      const custom = await getCustomSources(env);
+      const next = custom.filter(s => s.host !== host);
+      if (next.length === custom.length) return jsonResp({ error: 'Doar sursele ad\u0103ugate manual pot fi \u0219terse' }, 400);
+      await putCustomSources(env, next);
+      // Drop its cached status/raw
+      if (env.FINMATCH_KV) { try {
+        const raw = await env.FINMATCH_KV.get('src:status'); const map = raw ? JSON.parse(raw) : {};
+        delete map[host]; await env.FINMATCH_KV.put('src:status', JSON.stringify(map));
+        await env.FINMATCH_KV.delete('src:raw:' + host);
+      } catch (e) {} }
+      return jsonResp({ ok: true, host });
+    }
+    // POST /api/sources/toggle?host=   (works for built-in and custom)
+    if (pathname === '/api/sources/toggle') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      const host = url.searchParams.get('host');
+      const custom = await getCustomSources(env);
+      const c = custom.find(s => s.host === host);
+      if (c) { c.enabled = c.enabled === false; await putCustomSources(env, custom); return jsonResp({ ok: true, host, enabled: c.enabled }); }
+      if (!CRAWL_SOURCES.find(s => s.host === host)) return jsonResp({ error: 'Surs\u0103 necunoscut\u0103' }, 404);
+      const disabled = await getDisabledHosts(env);
+      const i = disabled.indexOf(host);
+      if (i >= 0) disabled.splice(i, 1); else disabled.push(host);
+      if (env.FINMATCH_KV) { try { await env.FINMATCH_KV.put('sources:disabled', JSON.stringify(disabled)); } catch (e) {} }
+      return jsonResp({ ok: true, host, enabled: i >= 0 });
+    }
+
     if (pathname === '/api/recrawl') {
       if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
       const host = url.searchParams.get('host');
       if (host) {
-        const src = CRAWL_SOURCES.find(s => s.host === host);
+        const src = (await getAllSources(env, true)).find(s => s.host === host);
         if (!src) return jsonResp({ error: 'Sursa necunoscuta: ' + host }, 404);
         const result = await crawlOne(src, env);
         return jsonResp({ ok: result.status !== 'err', result });
       }
       ctx.waitUntil(crawlAll(env));
-      return jsonResp({ ok: true, message: 'Re-crawl pornit', count: CRAWL_SOURCES.length });
+      return jsonResp({ ok: true, message: 'Re-crawl pornit', count: (await getAllSources(env)).length });
     }
 
     return new Response(HTML, {
