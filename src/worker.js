@@ -932,6 +932,34 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 @media (max-width: 768px) {
   #view-match [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
 }
+
+/* ── DEADLINE BAR ── */
+.deadline-bar { height: 3px; background: var(--surface2); border-radius: 100px; overflow: hidden; margin: 2px 0 10px; }
+.deadline-bar > div { height: 100%; border-radius: 100px; transition: width .3s; }
+/* ── CLOSING STRIP ── */
+.closing-strip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: .9rem 1.1rem; box-shadow: var(--shadow-sm); text-align: left; }
+.closing-strip-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: .6rem; }
+.closing-strip-title { font-size: 12px; font-weight: 600; color: var(--accent2); letter-spacing: .4px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+.closing-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border2); cursor: pointer; }
+.closing-item:first-of-type { border-top: none; }
+.closing-item:hover .closing-name { color: var(--accent); }
+.closing-name { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.closing-days { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 100px; white-space: nowrap; }
+/* ── CALENDAR ── */
+.cal-month { margin-bottom: 1.5rem; }
+.cal-month-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: .6rem; position: sticky; top: 62px; background: var(--bg); padding: 6px 0; z-index: 5; }
+.cal-month-name { font-family: var(--font-head); font-size: 1.05rem; font-weight: 700; letter-spacing: -.3px; }
+.cal-month-count { font-size: 12px; color: var(--ink3); }
+.cal-row { display: grid; grid-template-columns: 58px 1fr auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: .75rem 1rem; margin-bottom: 6px; cursor: pointer; transition: border-color .12s, transform .12s, box-shadow .12s; box-shadow: var(--shadow-sm); }
+.cal-row:hover { border-color: rgba(37,99,235,.35); transform: translateY(-1px); box-shadow: var(--shadow); }
+.cal-day { text-align: center; }
+.cal-day-num { font-family: var(--font-head); font-size: 1.3rem; font-weight: 700; line-height: 1; }
+.cal-day-name { font-size: 10px; color: var(--ink3); text-transform: uppercase; letter-spacing: .5px; }
+.cal-title { font-size: 13.5px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+.cal-meta { font-size: 11.5px; color: var(--ink3); }
+.cal-right { text-align: right; white-space: nowrap; }
+.cal-grant { font-family: var(--font-head); font-weight: 700; font-size: 13px; }
+@media (max-width: 768px) { .cal-row { grid-template-columns: 48px 1fr; } .cal-right { display: none; } }
 </style>
 </head>
 <body>
@@ -945,6 +973,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   <ul class="nav-links">
     <li><a class="active" onclick="showView('search')">Căutare</a></li>
     <li><a onclick="showView('match')">Potrivire AI</a></li>
+    <li><a onclick="showView('calendar')">Calendar</a></li>
     <li><a onclick="showView('saved')">Salvate</a></li>
     <li><a onclick="showView('alerts')">Alerte</a></li>
     <li><a onclick="showView('sources')">Surse</a></li>
@@ -999,6 +1028,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
         <div class="stat-label">Actualizări azi</div>
       </div>
     </div>
+    <div id="closing-strip" style="display:none;max-width:860px;margin:1.25rem auto 0;"></div>
   </div>
 
   <div class="main">
@@ -1213,6 +1243,21 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   <div id="m-results"></div>
 </div>
 
+<div id="view-calendar" style="display:none;max-width:960px;margin:2.5rem auto;padding:0 2rem 4rem;">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:1.5rem;">
+    <div>
+      <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:.3rem;">Calendar finanțări</h2>
+      <p style="color:var(--ink2);font-size:14px;font-weight:300;">Termene limită pe următoarele 6 luni. Nu rata niciun apel.</p>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="chip active" onclick="calSetFilter('all',this)">Toate</button>
+      <button class="chip" onclick="calSetFilter('30',this)">≤ 30 zile</button>
+      <button class="chip" onclick="calSetFilter('active',this)">Doar active</button>
+    </div>
+  </div>
+  <div id="cal-body"></div>
+</div>
+
 <div id="view-saved" style="display:none;max-width:800px;margin:3rem auto;padding:0 2rem;">
   <h2 style="font-family:var(--font-head);font-size:1.4rem;font-weight:700;margin-bottom:2rem;letter-spacing:-0.5px">Oportunități salvate</h2>
   <div id="saved-list"></div>
@@ -1224,10 +1269,11 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:12px;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;">
-      <input type="text" id="alert-query" placeholder="Cuvinte cheie..." style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:14px;outline:none;background:var(--surface);">
+      <input type="text" id="alert-query" placeholder="Cuvinte cheie (ex: digitalizare IMM)" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:14px;outline:none;background:var(--surface);">
+      <input type="email" id="alert-email" placeholder="email@exemplu.ro" style="flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:var(--font-body);font-size:14px;outline:none;background:var(--surface);">
       <button onclick="saveAlert()" style="background:var(--accent);color:white;border:none;padding:9px 18px;border-radius:8px;font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">+ Adaugă alertă</button>
     </div>
-    <p style="font-size:12px;color:var(--ink3);font-weight:300;">Notificări prin email când sunt detectate oportunități noi pentru această căutare.</p>
+    <p style="font-size:12px;color:var(--ink3);font-weight:300;">Cu email: primești imediat un rezumat, apoi un digest săptămânal cu oportunități noi și termene care se apropie. Fără email: alerta e doar locală, în acest browser.</p>
   </div>
 
   <div id="alerts-list"></div>
@@ -1763,6 +1809,7 @@ async function loadPublished() {
       const el = document.getElementById('cnt-active'); if (el) el.textContent = ac;
       const ct = document.getElementById('cnt-today'); if (ct) ct.textContent = OPPORTUNITIES.length;
       if (typeof renderResults === 'function') renderResults();
+      renderClosingStrip();
     }
   } catch(e) {}
 }
@@ -1784,6 +1831,7 @@ function init() {
     if (alts) alerts = JSON.parse(alts);
   } catch(e) {}
   renderResults();
+  renderClosingStrip();
   loadPublished();
   document.getElementById('search-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') doSearch();
@@ -1792,18 +1840,19 @@ function init() {
 
 /* ── View routing ────────────────────────────────────────────────────────── */
 function showView(view) {
-  ['search','match','saved','alerts','sources','admin'].forEach(v => {
+  ['search','match','calendar','saved','alerts','sources','admin'].forEach(v => {
     const el = document.getElementById('view-' + v);
     if (el) el.style.display = v === view ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-links a').forEach((a, i) => {
-    a.classList.toggle('active', ['search','match','saved','alerts','sources','admin'][i] === view);
+    a.classList.toggle('active', ['search','match','calendar','saved','alerts','sources','admin'][i] === view);
   });
   if (view === 'saved') renderSaved();
-  if (view === 'alerts') renderAlerts();
+  if (view === 'alerts') { renderAlerts(); try { const e = localStorage.getItem('fm_email'); const el = document.getElementById('alert-email'); if (e && el && !el.value) el.value = e; } catch(x) {} }
   if (view === 'sources') renderSources();
   if (view === 'admin') renderAdmin();
   if (view === 'match') initMatch();
+  if (view === 'calendar') renderCalendar();
 }
 
 function setSearch(q) {
@@ -1915,6 +1964,7 @@ function renderResults() {
             ? \`<div><div class="grant-val">\${o.cofinancing}%</div><div class="grant-label">cofinanțare</div></div>\`
             : '<div><div class="grant-val" style="color:var(--accent)">100%</div><div class="grant-label">nerambursabil</div></div>'}
         </div>
+        <div class="deadline-bar" style="\${dlBar(o).style}"><div style="width:\${dlBar(o).pct}%;background:\${dlBar(o).color};"></div></div>
         <div class="opp-actions">
           <div class="deadline \${o.isUrgent?'urgent':''}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
@@ -2147,14 +2197,30 @@ function renderSaved() {
 }
 
 /* ── Alerts view ─────────────────────────────────────────────────────────── */
-function saveAlert() {
+async function saveAlert() {
   const q = document.getElementById('alert-query').value.trim();
+  const emailEl = document.getElementById('alert-email');
+  const email = emailEl ? emailEl.value.trim() : '';
   if (!q) return showToast('Introduceți un termen de căutare');
-  alerts.push({ query: q, created: new Date().toLocaleDateString('ro-RO'), active: true });
+  const entry = { query: q, created: new Date().toLocaleDateString('ro-RO'), active: true, email: email || null, subId: null };
+  if (email) {
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(email)) return showToast('Email invalid');
+    try { localStorage.setItem('fm_email', email); } catch(e) {}
+    try {
+      const r = await fetch('/api/alerts/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, query: q }) });
+      const j = await r.json();
+      if (j.ok) {
+        entry.subId = j.id;
+        showToast(j.emailSent ? ('\u2713 Alert\u0103 activ\u0103 \u2014 email trimis (' + (j.matches||0) + ' potriviri)') : ('Alert\u0103 salvat\u0103. Email: ' + (j.emailError || 'nesetat')));
+      } else { showToast('\u2717 ' + (j.error || 'Eroare la abonare')); return; }
+    } catch(e) { showToast('\u2717 Eroare re\u021Bea'); return; }
+  } else {
+    showToast('Alert\u0103 local\u0103 creat\u0103: \"' + q + '\"');
+  }
+  alerts.push(entry);
   document.getElementById('alert-query').value = '';
   renderAlerts();
   persistState();
-  showToast('Alertă creată: "' + q + '"');
 }
 
 function renderAlerts() {
@@ -2170,7 +2236,7 @@ function renderAlerts() {
         <div style="font-size:12px;color:var(--ink3);">Creată: \${a.created}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-        <span style="font-size:11px;background:var(--accent-light);color:var(--accent);padding:3px 8px;border-radius:100px;">Activă</span>
+        <span style="font-size:11px;background:\${a.email?'var(--accent-light)':'var(--surface2)'};color:\${a.email?'var(--accent)':'var(--ink3)'};padding:3px 8px;border-radius:100px;">\${a.email?'\u2709 '+a.email:'Local\u0103'}</span>
         <button onclick="setSearch('\${a.query}');showView('search');" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:3px 9px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Caută acum</button>
         <button onclick="removeAlert(\${i})" style="background:none;border:none;color:var(--ink3);cursor:pointer;font-size:18px;line-height:1;">×</button>
       </div>
@@ -2178,7 +2244,11 @@ function renderAlerts() {
   \`).join('');
 }
 
-function removeAlert(i) { alerts.splice(i, 1); renderAlerts(); persistState(); showToast('Alertă eliminată'); }
+function removeAlert(i) {
+  const a = alerts[i];
+  if (a && a.subId && a.email) { fetch('/api/alerts/unsubscribe?id=' + encodeURIComponent(a.subId) + '&e=' + encodeURIComponent(a.email)).catch(()=>{}); }
+  alerts.splice(i, 1); renderAlerts(); persistState(); showToast('Alert\u0103 eliminat\u0103');
+}
 
 /* ── Sources view ────────────────────────────────────────────────────────── */
 async function renderSources() {
@@ -2541,6 +2611,88 @@ async function purgeAuto(btn) {
       switchAdminTab('review');
     } else { showToast('\u2717 Eroare'); if (btn) btn.disabled=false; }
   } catch(e) { showToast('\u2717 Eroare re\u021Bea'); if (btn) btn.disabled=false; }
+}
+
+/* ── Deadline helpers ── */
+function dlDays(o) {
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(o.deadline || '')) return null;
+  return Math.ceil((new Date(o.deadline) - new Date()) / 86400000);
+}
+function dlBar(o) {
+  const d = dlDays(o);
+  if (d === null || o.status === 'ÎNCHIS' || d <= 0) return { style: 'display:none;', pct: 0, color: 'transparent' };
+  const launch = /^\\d{4}-\\d{2}-\\d{2}$/.test(o.launchDate||'') ? new Date(o.launchDate) : null;
+  const total = launch ? Math.max(1, (new Date(o.deadline) - launch) / 86400000) : 120;
+  const pct = Math.max(4, Math.min(100, 100 - (d / total) * 100));
+  const color = d <= 14 ? 'var(--accent2)' : d <= 30 ? 'var(--warn)' : 'var(--accent)';
+  return { style: '', pct: Math.round(pct), color };
+}
+function dlLabel(d) { return d <= 0 ? 'expirat' : d === 1 ? 'mâine' : d + ' zile'; }
+function dlColor(d) { return d <= 14 ? 'var(--accent2)' : d <= 30 ? 'var(--warn)' : 'var(--accent)'; }
+function dlBg(d) { return d <= 14 ? 'var(--accent2-light)' : d <= 30 ? 'var(--warn-light)' : 'var(--accent-light)'; }
+
+/* ── Closing-soon strip (homepage) ── */
+function renderClosingStrip() {
+  const el = document.getElementById('closing-strip');
+  if (!el) return;
+  const soon = OPPORTUNITIES
+    .map(o => ({ o, d: dlDays(o) }))
+    .filter(x => x.d !== null && x.d > 0 && x.d <= 30 && x.o.status !== 'ÎNCHIS')
+    .sort((a, b) => a.d - b.d).slice(0, 5);
+  if (!soon.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = '<div class="closing-strip">'
+    + '<div class="closing-strip-head"><div class="closing-strip-title">⏰ Se închid în 30 de zile</div>'
+    + '<a onclick="showView(\\'calendar\\')" style="font-size:12px;color:var(--accent);cursor:pointer;font-weight:500;">Calendar complet →</a></div>'
+    + soon.map(x => '<div class="closing-item" onclick="openDetail(' + x.o.id + ')">'
+        + '<div class="closing-name">' + x.o.title + '</div>'
+        + '<span class="closing-days" style="color:' + dlColor(x.d) + ';background:' + dlBg(x.d) + ';">' + dlLabel(x.d) + '</span></div>').join('')
+    + '</div>';
+}
+
+/* ── Calendar view ── */
+let calFilter = 'all';
+function calSetFilter(f, btn) {
+  calFilter = f;
+  document.querySelectorAll('#view-calendar .chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderCalendar();
+}
+const RO_MONTHS = ['Ianuarie','Februarie','Martie','Aprilie','Mai','Iunie','Iulie','August','Septembrie','Octombrie','Noiembrie','Decembrie'];
+const RO_DAYS = ['Dum','Lun','Mar','Mie','Joi','Vin','Sâm'];
+function renderCalendar() {
+  const body = document.getElementById('cal-body');
+  if (!body) return;
+  const items = OPPORTUNITIES
+    .map(o => ({ o, d: dlDays(o) }))
+    .filter(x => x.d !== null && x.d > 0 && x.d <= 183 && x.o.status !== 'ÎNCHIS')
+    .filter(x => calFilter === '30' ? x.d <= 30 : calFilter === 'active' ? x.o.status === 'ACTIV' : true)
+    .sort((a, b) => new Date(a.o.deadline) - new Date(b.o.deadline));
+  const undated = OPPORTUNITIES.filter(o => dlDays(o) === null && o.status !== 'ÎNCHIS');
+  if (!items.length) {
+    body.innerHTML = '<div class="empty-state"><h3>Niciun termen în interval</h3><p>Încearcă alt filtru.</p></div>';
+    return;
+  }
+  const groups = {};
+  for (const x of items) {
+    const dt = new Date(x.o.deadline);
+    const key = dt.getFullYear() + '-' + String(dt.getMonth()).padStart(2, '0');
+    (groups[key] = groups[key] || { name: RO_MONTHS[dt.getMonth()] + ' ' + dt.getFullYear(), rows: [] }).rows.push(x);
+  }
+  body.innerHTML = Object.keys(groups).sort().map(k => {
+    const g = groups[k];
+    return '<div class="cal-month"><div class="cal-month-head"><div class="cal-month-name">' + g.name + '</div><div class="cal-month-count">' + g.rows.length + ' termene</div></div>'
+      + g.rows.map(x => {
+        const dt = new Date(x.o.deadline);
+        const statusCls = x.o.status === 'ACTIV' ? 'active' : 'upcoming';
+        return '<div class="cal-row" onclick="openDetail(' + x.o.id + ')">'
+          + '<div class="cal-day"><div class="cal-day-num" style="color:' + dlColor(x.d) + ';">' + dt.getDate() + '</div><div class="cal-day-name">' + RO_DAYS[dt.getDay()] + '</div></div>'
+          + '<div><div class="cal-title">' + x.o.title + '</div><div class="cal-meta"><span class="status-badge ' + statusCls + '" style="font-size:9px;padding:1px 7px;margin-right:6px;">' + x.o.status + '</span>' + x.o.source + ' · ' + (x.o.domains||[]).slice(0,2).join(', ') + '</div></div>'
+          + '<div class="cal-right"><div class="cal-grant">€' + (x.o.grantMax||0).toLocaleString('ro-RO') + '</div><span class="closing-days" style="color:' + dlColor(x.d) + ';background:' + dlBg(x.d) + ';">' + dlLabel(x.d) + '</span></div>'
+          + '</div>';
+      }).join('') + '</div>';
+  }).join('')
+  + (undated.length ? '<div style="font-size:12px;color:var(--ink3);margin-top:1rem;">' + undated.length + ' oportunități fără termen fix (estimate/„vezi portal”) nu apar în calendar.</div>' : '');
 }
 
 function showToast(msg) {
@@ -3062,9 +3214,114 @@ async function matchProfile(profile, env) {
   return { usedAI, count: results.length, results };
 }
 
+
+/* ═══ EMAIL ALERTS — subscriptions in KV + weekly digest via Resend ═══
+   Secrets: RESEND_API_KEY | Vars: ALERT_FROM (e.g. "FinMatch <alerte@domeniu.ro>")
+   KV: alerts:subs -> { id: {email, query, created, lastSent, confirmed} } */
+
+function normEmail(e) { return String(e || '').trim().toLowerCase(); }
+function isEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+
+async function getSubs(env) {
+  if (!env.FINMATCH_KV) return {};
+  try { const r = await env.FINMATCH_KV.get('alerts:subs'); return r ? JSON.parse(r) : {}; } catch (e) { return {}; }
+}
+async function putSubs(env, subs) {
+  if (!env.FINMATCH_KV) return;
+  try { await env.FINMATCH_KV.put('alerts:subs', JSON.stringify(subs)); } catch (e) {}
+}
+
+// Full catalog (seed + auto-published) for matching alerts server-side.
+async function getCatalog(env) {
+  let pub = {};
+  if (env.FINMATCH_KV) { try { const p = await env.FINMATCH_KV.get('opps:published'); if (p) pub = JSON.parse(p); } catch (e) {} }
+  return [...API_OPPORTUNITIES, ...Object.values(pub)];
+}
+
+function oppMatchesQuery(o, q) {
+  const words = q.toLowerCase().split(/\s+/).filter(x => x.length > 2);
+  if (!words.length) return false;
+  const hay = ((o.title||'') + ' ' + (o.program||'') + ' ' + (o.summary||'') + ' ' + (o.domains||[]).join(' ') + ' ' + (o.beneficiaries||[]).join(' ') + ' ' + (o.regions||[]).join(' ')).toLowerCase();
+  return words.every(x => hay.includes(x));
+}
+
+function daysUntil(dateStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return null;
+  return Math.ceil((new Date(dateStr) - new Date()) / 86400000);
+}
+
+function fmtEur(n) { return '\u20ac' + (Number(n) || 0).toLocaleString('ro-RO'); }
+
+function digestHtml(sub, matches, closing, baseUrl) {
+  const row = o => {
+    const d = daysUntil(o.deadline);
+    const dl = d === null ? (o.deadline || '') : (d <= 0 ? 'expirat' : d + ' zile');
+    return '<tr>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;">'
+      + '<div style="font-weight:600;color:#0f172a;font-size:14px;">' + escapeHtml(o.title || o.program) + '</div>'
+      + '<div style="font-size:12px;color:#64748b;margin-top:2px;">' + escapeHtml(o.source) + ' \u00b7 ' + (o.domains||[]).slice(0,3).join(', ') + '</div>'
+      + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;font-size:13px;color:#0f172a;">' + fmtEur(o.grantMax) + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;font-size:13px;color:' + (d !== null && d <= 14 ? '#c2410c' : '#475569') + ';">' + dl + '</td>'
+      + '</tr>';
+  };
+  const table = rows => '<table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">' + rows.map(row).join('') + '</table>';
+  return '<div style="font-family:Inter,Arial,sans-serif;background:#f5f7fc;padding:24px;">'
+    + '<div style="max-width:620px;margin:0 auto;">'
+    + '<div style="font-weight:800;font-size:18px;color:#0f172a;margin-bottom:4px;">FinMatch Rom\u00e2nia</div>'
+    + '<div style="font-size:13px;color:#64748b;margin-bottom:20px;">Digest s\u0103pt\u0103m\u00e2nal pentru alerta <strong>\u201e' + escapeHtml(sub.query) + '\u201d</strong></div>'
+    + (matches.length ? '<h3 style="font-size:14px;color:#0f172a;margin:16px 0 8px;">Oportunit\u0103\u021Bi care se potrivesc (' + matches.length + ')</h3>' + table(matches) : '<p style="font-size:13px;color:#64748b;">Nicio oportunitate nou\u0103 pentru aceast\u0103 alert\u0103 s\u0103pt\u0103m\u00e2na aceasta.</p>')
+    + (closing.length ? '<h3 style="font-size:14px;color:#c2410c;margin:20px 0 8px;">\u23f0 Se \u00eenchid \u00een urm\u0103toarele 30 de zile (' + closing.length + ')</h3>' + table(closing) : '')
+    + '<div style="margin-top:22px;"><a href="' + baseUrl + '" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;">Deschide FinMatch \u2192</a></div>'
+    + '<div style="font-size:11px;color:#94a3b8;margin-top:22px;line-height:1.6;">Prime\u0219ti acest email pentru c\u0103 ai creat o alert\u0103 pe FinMatch. Verific\u0103 \u00eentotdeauna sursa oficial\u0103 \u00eenainte de a aplica.<br>'
+    + '<a href="' + baseUrl + '/api/alerts/unsubscribe?id=' + encodeURIComponent(sub.id) + '&e=' + encodeURIComponent(sub.email) + '" style="color:#94a3b8;">Dezabonare</a></div>'
+    + '</div></div>';
+}
+
+function escapeHtml(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function sendEmail(env, to, subject, html) {
+  const key = env.RESEND_API_KEY;
+  if (!key) return { ok: false, error: 'RESEND_API_KEY nesetat' };
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: env.ALERT_FROM || 'FinMatch <onboarding@resend.dev>', to: [to], subject, html }),
+    });
+    if (!res.ok) { let m = 'HTTP ' + res.status; try { const j = await res.json(); m = j.message || j.error || m; } catch (e) {} return { ok: false, error: m }; }
+    return { ok: true };
+  } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
+}
+
+// Weekly digest: for each confirmed sub not emailed in the last 6 days, send matches + closing-soon.
+async function sendDigests(env, baseUrl) {
+  const subs = await getSubs(env);
+  const ids = Object.keys(subs);
+  if (!ids.length) return { sent: 0 };
+  const catalog = (await getCatalog(env)).filter(o => o.status === 'ACTIV' || o.status === 'URMEAZ\u0102');
+  const now = Date.now();
+  let sent = 0, errors = 0;
+  for (const id of ids) {
+    const s = subs[id];
+    if (!s || !s.email) continue;
+    if (s.lastSent && now - new Date(s.lastSent).getTime() < 6 * 86400000) continue;
+    const matches = catalog.filter(o => oppMatchesQuery(o, s.query)).slice(0, 10);
+    const closing = catalog.filter(o => { const d = daysUntil(o.deadline); return d !== null && d > 0 && d <= 30; })
+      .sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline)).slice(0, 8);
+    if (!matches.length && !closing.length) { s.lastSent = new Date().toISOString(); continue; }
+    const subject = matches.length ? ('FinMatch: ' + matches.length + ' oportunit\u0103\u021Bi pentru \u201e' + s.query + '\u201d') : 'FinMatch: termene care se apropie';
+    const r = await sendEmail(env, s.email, subject, digestHtml(s, matches, closing, baseUrl));
+    if (r.ok) { s.lastSent = new Date().toISOString(); sent++; } else { s.lastError = r.error; errors++; }
+  }
+  await putSubs(env, subs);
+  return { sent, errors };
+}
+
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(crawlAll(env));
+    const baseUrl = env.PUBLIC_URL || 'https://finmatch.workers.dev';
+    ctx.waitUntil(crawlAll(env).then(() => sendDigests(env, baseUrl)));
   },
 
   async fetch(request, env, ctx) {
@@ -3186,6 +3443,48 @@ export default {
       delete pub[id];
       await env.FINMATCH_KV.put('opps:published', JSON.stringify(pub));
       return jsonResp({ ok: true, id });
+    }
+
+    // ── Email alerts ──
+    if (pathname === '/api/alerts/subscribe') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      let b; try { b = await request.json(); } catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
+      const email = normEmail(b.email); const query = String(b.query || '').trim().slice(0, 120);
+      if (!isEmail(email)) return jsonResp({ error: 'Email invalid' }, 400);
+      if (!query) return jsonResp({ error: 'Termen lips\u0103' }, 400);
+      const subs = await getSubs(env);
+      // Dedup same email+query
+      const dup = Object.values(subs).find(s => s.email === email && s.query.toLowerCase() === query.toLowerCase());
+      if (dup) return jsonResp({ ok: true, id: dup.id, existing: true });
+      const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      subs[id] = { id, email, query, created: new Date().toISOString(), lastSent: null };
+      await putSubs(env, subs);
+      // Send an immediate first digest so the user sees value right away.
+      const baseUrl = url.origin;
+      const catalog = (await getCatalog(env)).filter(o => o.status === 'ACTIV' || o.status === 'URMEAZ\u0102');
+      const matches = catalog.filter(o => oppMatchesQuery(o, query)).slice(0, 10);
+      const closing = catalog.filter(o => { const d = daysUntil(o.deadline); return d !== null && d > 0 && d <= 30; }).slice(0, 8);
+      const r = await sendEmail(env, email, 'FinMatch: alert\u0103 activat\u0103 pentru \u201e' + query + '\u201d', digestHtml(subs[id], matches, closing, baseUrl));
+      if (r.ok) { subs[id].lastSent = new Date().toISOString(); await putSubs(env, subs); }
+      return jsonResp({ ok: true, id, emailSent: r.ok, emailError: r.ok ? null : r.error, matches: matches.length });
+    }
+    if (pathname === '/api/alerts/unsubscribe') {
+      const id = url.searchParams.get('id'); const e = normEmail(url.searchParams.get('e'));
+      const subs = await getSubs(env);
+      if (id && subs[id] && subs[id].email === e) { delete subs[id]; await putSubs(env, subs); }
+      return new Response('<html><body style="font-family:Inter,Arial;padding:40px;text-align:center;color:#0f172a;"><h2>Dezabonat</h2><p>Nu vei mai primi alerte pentru aceast\u0103 c\u0103utare.</p><a href="' + url.origin + '">\u00cenapoi la FinMatch</a></body></html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (pathname === '/api/alerts/mine') {
+      const e = normEmail(url.searchParams.get('e'));
+      if (!isEmail(e)) return jsonResp({ items: [] });
+      const subs = await getSubs(env);
+      return jsonResp({ items: Object.values(subs).filter(s => s.email === e).map(s => ({ id: s.id, query: s.query, created: s.created, lastSent: s.lastSent })) });
+    }
+    // Manual digest trigger (admin): POST /api/alerts/send-digests
+    if (pathname === '/api/alerts/send-digests') {
+      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
+      const r = await sendDigests(env, url.origin);
+      return jsonResp({ ok: true, ...r });
     }
 
     if (pathname === '/api/recrawl') {
