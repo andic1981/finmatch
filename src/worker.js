@@ -894,6 +894,40 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   .opp-summary { -webkit-line-clamp: 3; }
   .opp-footer { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
+
+/* ── MATCH PROMPT ── */
+.m-prompt {
+  width: 100%;
+  min-height: 150px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--surface);
+  resize: vertical;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.m-prompt::placeholder { color: var(--ink3); font-weight: 300; }
+.m-prompt:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,56,.10); }
+.m-example {
+  font-size: 11.5px;
+  color: var(--ink2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all .12s;
+}
+.m-example:hover { background: var(--accent-light); color: var(--accent); border-color: rgba(26,92,56,.25); }
+@media (max-width: 768px) {
+  #view-match [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
 </style>
 </head>
 <body>
@@ -1084,71 +1118,92 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
   </div>
 </div>
 
-<div id="view-match" style="display:none;max-width:820px;margin:2.5rem auto;padding:0 2rem 4rem;">
-  <div style="text-align:center;margin-bottom:2rem;">
-    <div class="hero-badge" style="margin-bottom:1rem;">Asistent AI de potrivire</div>
-    <h2 style="font-family:var(--font-head);font-size:1.6rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:0.5rem;">Găsește finanțarea potrivită pentru tine</h2>
-    <p style="color:var(--ink2);font-size:14px;font-weight:300;max-width:520px;margin:0 auto;">Completează profilul proiectului tău și AI-ul îți clasifică programele după potrivire, cu explicații.</p>
+<div id="view-match" style="display:none;max-width:860px;margin:2.5rem auto;padding:0 2rem 4rem;">
+  <div style="text-align:center;margin-bottom:1.75rem;">
+    <div class="hero-badge" style="margin-bottom:.9rem;">✨ Asistent AI de potrivire</div>
+    <h2 style="font-family:var(--font-head);font-size:1.6rem;font-weight:700;letter-spacing:-0.5px;margin-bottom:0.45rem;">Descrie proiectul tău. AI-ul găsește finanțarea.</h2>
+    <p style="color:var(--ink2);font-size:14px;font-weight:300;max-width:540px;margin:0 auto;">Cu cât descrii mai concret ce vrei să faci, cu atât potrivirile și explicațiile sunt mai bune.</p>
   </div>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;box-shadow:var(--shadow-sm);margin-bottom:1.5rem;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div>
-        <label class="filter-label">Tip organizație</label>
-        <select id="m-org" class="wl-input">
-          <option value="IMM">IMM</option>
-          <option value="Startup">Startup</option>
-          <option value="ONG">ONG</option>
-          <option value="UAT">UAT / Autoritate publică</option>
-          <option value="Fermier">Fermier</option>
-          <option value="Universitate">Universitate</option>
-        </select>
-      </div>
-      <div>
-        <label class="filter-label">Regiune</label>
-        <select id="m-region" class="wl-input">
-          <option value="Oricare">Oricare</option>
-          <option value="Vest">Vest</option>
-          <option value="Nord-Vest">Nord-Vest</option>
-          <option value="Nord-Est">Nord-Est</option>
-          <option value="Centru">Centru</option>
-          <option value="București-Ilfov">București-Ilfov</option>
-          <option value="Național">Național</option>
-        </select>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:1.5rem;">
+
+    <!-- PROMPT: the primary input -->
+    <div style="padding:1.25rem 1.5rem 0.75rem;">
+      <label class="filter-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Descrie proiectul</span>
+        <span id="m-desc-count" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink3);">0 / 1500</span>
+      </label>
+      <textarea id="m-desc" class="m-prompt" rows="6" maxlength="1500" oninput="mDescCount(this)"
+        placeholder="ex: Suntem o fermă de familie din județul Timiș (SRL, 3 angajați). Vrem să instalăm panouri fotovoltaice de 100 kW pe hala de depozitare și să cumpărăm un sistem de irigații prin picurare. Buget estimat 180.000 €, putem cofinanța 20%. Am mai avut un proiect AFIR în 2022."></textarea>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span style="font-size:11px;color:var(--ink3);align-self:center;margin-right:2px;">Exemple:</span>
+        <button type="button" class="m-example" onclick="mUseExample(this)">Digitalizare magazin online IMM</button>
+        <button type="button" class="m-example" onclick="mUseExample(this)">ONG — centru de zi pentru vârstnici</button>
+        <button type="button" class="m-example" onclick="mUseExample(this)">Primărie — eficiență energetică școală</button>
+        <button type="button" class="m-example" onclick="mUseExample(this)">Startup tech — produs AI, seed</button>
       </div>
     </div>
 
-    <div style="margin-top:14px;">
-      <label class="filter-label">Domenii de interes (alege unul sau mai multe)</label>
-      <div class="filter-chips" id="m-domains">
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Digitalizare">Digitalizare</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Energie">Energie</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Agricultură">Agricultură</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Antreprenoriat">Antreprenoriat</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Infrastructură">Infrastructură</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Mediu">Mediu</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Sănătate">Sănătate</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cercetare / inovare">Cercetare</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Incluziune socială">Incluziune</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cultură">Cultură</button>
-        <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Turism">Turism</button>
+    <hr class="filter-sep" style="margin:0.75rem 1.5rem;">
+
+    <!-- STRUCTURED HINTS: secondary -->
+    <div style="padding:0.75rem 1.5rem 1.5rem;">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:10px;">Opțional — precizează ca să restrângem candidații:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div>
+          <label class="filter-label">Tip organizație</label>
+          <select id="m-org" class="wl-input">
+            <option value="">Nespecificat</option>
+            <option value="IMM">IMM</option>
+            <option value="Startup">Startup</option>
+            <option value="ONG">ONG</option>
+            <option value="UAT">UAT / Autoritate publică</option>
+            <option value="Fermier">Fermier</option>
+            <option value="Universitate">Universitate</option>
+          </select>
+        </div>
+        <div>
+          <label class="filter-label">Regiune</label>
+          <select id="m-region" class="wl-input">
+            <option value="Oricare">Oricare</option>
+            <option value="Vest">Vest</option>
+            <option value="Nord-Vest">Nord-Vest</option>
+            <option value="Nord-Est">Nord-Est</option>
+            <option value="Centru">Centru</option>
+            <option value="București-Ilfov">București-Ilfov</option>
+            <option value="Național">Național</option>
+          </select>
+        </div>
+        <div>
+          <label class="filter-label">Buget estimat (€)</label>
+          <input type="number" id="m-size" class="wl-input" placeholder="ex: 250000" min="0" step="10000">
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label class="filter-label">Domenii</label>
+        <div class="filter-chips" id="m-domains">
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Digitalizare">Digitalizare</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Energie">Energie</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Agricultură">Agricultură</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Antreprenoriat">Antreprenoriat</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Infrastructură">Infrastructură</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Mediu">Mediu</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Sănătate">Sănătate</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cercetare / inovare">Cercetare</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Incluziune socială">Incluziune</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Cultură">Cultură</button>
+          <button type="button" class="chip" onclick="mToggleDomain(this)" data-val="Turism">Turism</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--ink3);">Ctrl/⌘ + Enter pentru a rula</span>
+        <button onclick="runMatch()" id="m-btn" style="padding:11px 26px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;box-shadow:var(--shadow-sm);">
+          ✨ Găsește potrivirile
+        </button>
       </div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
-      <div>
-        <label class="filter-label">Buget proiect estimat (€)</label>
-        <input type="number" id="m-size" class="wl-input" placeholder="ex: 250000" min="0" step="10000">
-      </div>
-      <div>
-        <label class="filter-label">Descriere scurtă (opțional)</label>
-        <input type="text" id="m-desc" class="wl-input" placeholder="ex: modernizare fermă cu panouri solare">
-      </div>
-    </div>
-
-    <button onclick="runMatch()" id="m-btn" style="margin-top:16px;width:100%;padding:12px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent-dark) 100%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;">
-      ✨ Găsește potrivirile
-    </button>
   </div>
 
   <div id="m-results"></div>
@@ -2337,6 +2392,27 @@ async function recrawlSource(host, btn) {
   }
 }
 
+function mDescCount(el) {
+  const c = document.getElementById('m-desc-count');
+  if (c) c.textContent = el.value.length + ' / 1500';
+}
+const M_EXAMPLES = {
+  'Digitalizare magazin online IMM': 'Suntem un IMM din retail (SRL, 8 angaja\u021Bi, Cluj). Vrem s\u0103 lans\u0103m un magazin online cu ERP integrat, sistem de facturare electronic\u0103 \u0219i automatizare stocuri. Buget estimat 60.000 \u20ac, cofinan\u021Bare posibil\u0103 25%.',
+  'ONG \u2014 centru de zi pentru v\u00e2rstnici': 'Asocia\u021Bie non-profit din Ia\u0219i, activ\u0103 din 2015 \u00een servicii sociale. Vrem s\u0103 deschidem un centru de zi pentru 40 de v\u00e2rstnici: amenajare spa\u021Biu, echipamente, personal 12 luni. Buget ~180.000 \u20ac. Avem experien\u021B\u0103 cu FSE.',
+  'Prim\u0103rie \u2014 eficien\u021B\u0103 energetic\u0103 \u0219coal\u0103': 'UAT comun\u0103 din jude\u021Bul Hunedoara. Reabilitare termic\u0103 \u0219i panouri fotovoltaice pentru \u0219coala gimnazial\u0103 (1.200 mp). Buget estimat 900.000 \u20ac. Zona este \u00een tranzi\u021Bie just\u0103.',
+  'Startup tech \u2014 produs AI, seed': 'Startup fondat \u00een 2025 \u00een Timi\u0219oara, 3 co-fondatori, produs SaaS cu AI pentru logistic\u0103, MVP validat cu 5 clien\u021Bi pilot. C\u0103ut\u0103m 100.000 \u20ac pentru accelerare \u0219i dezvoltare produs.',
+};
+function mUseExample(btn) {
+  const key = btn.textContent.trim();
+  const ta = document.getElementById('m-desc');
+  ta.value = M_EXAMPLES[key] || key;
+  mDescCount(ta);
+  ta.focus();
+}
+document.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.activeElement && document.activeElement.id === 'm-desc') { e.preventDefault(); runMatch(); }
+});
+
 let mDomains = new Set();
 
 function initMatch() {
@@ -2359,7 +2435,8 @@ async function runMatch() {
     projectSize: Number(document.getElementById('m-size').value) || 0,
     description: document.getElementById('m-desc').value.trim(),
   };
-  btn.disabled = true; btn.textContent = '\u2728 Se analizează...';
+  if (!profile.description && !profile.domains.length && !profile.orgType) { showToast('Descrie proiectul sau alege m\u0103car un domeniu'); return; }
+  btn.disabled = true; btn.textContent = '\u2728 Se analizeaz\u0103...';
   box.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;">' +
     Array(3).fill('<div class="skeleton" style="height:96px;"></div>').join('') + '</div>';
   try {
@@ -2496,27 +2573,27 @@ function jsonResp(data, status = 200) {
 }
 
 const API_OPPORTUNITIES = [
-  { id:1,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Antreprenoriat','Digitalizare'],                  beneficiaries:['IMM','Universitate'],       regions:[`Național`],  grantMin:500000,  grantMax:5000000,  program:'PoCIDIF' },
-  { id:2,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Energie'],                                         beneficiaries:['IMM'],                      regions:[`Național`],  grantMin:5000,    grantMax:30000,    program:'PNRR C16' },
-  { id:3,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Mediu'],                                           beneficiaries:['ONG','UAT','Universitate'], regions:[`Național`],  grantMin:100000,  grantMax:3000000,  program:'PDD' },
-  { id:4,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Sănătate'],                                        beneficiaries:['UAT','Universitate'],       regions:[`Național`],  grantMin:1000000, grantMax:50000000, program:'Programul Sănătate' },
-  { id:5,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Incluziune socială'],                              beneficiaries:['ONG','UAT'],                regions:[`Național`],  grantMin:50000,   grantMax:500000,   program:'PoIDS' },
-  { id:6,  status:'URMEAZĂ', source:'mfe.gov.ro',             sourceTier:1, domains:['Energie','Infrastructură'],                        beneficiaries:['UAT','IMM'],                regions:[`Național`],  grantMin:200000,  grantMax:10000000, program:'PTJ' },
-  { id:7,  status:'ÎNCHIS',  source:'adrvest.ro',             sourceTier:1, domains:['Antreprenoriat','Energie'],                        beneficiaries:['IMM'],                      regions:['Vest'],      grantMin:50000,   grantMax:2000000,  program:'PTJ IMM' },
-  { id:8,  status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Infrastructură','Antreprenoriat'],                 beneficiaries:['UAT','IMM'],                regions:['Vest'],      grantMin:1000000, grantMax:20000000, program:'PTJ Parcuri' },
-  { id:9,  status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Energie'],                                         beneficiaries:['IMM','UAT'],                regions:['Vest'],      grantMin:200000,  grantMax:10000000, program:'PTJ Energie' },
-  { id:10, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Antreprenoriat','Digitalizare'],                   beneficiaries:['Startup'],                  regions:['Vest'],      grantMin:50000,   grantMax:100000,   program:'Vest Ventures' },
-  { id:11, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Cultură','Turism'],                                beneficiaries:['UAT','ONG'],                regions:['Vest'],      grantMin:200000,  grantMax:4000000,  program:'PR Vest UNESCO' },
-  { id:12, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Sănătate'],                                        beneficiaries:['UAT'],                      regions:['Vest'],      grantMin:1000000, grantMax:3000000,  program:'PR Vest Sănătate' },
-  { id:13, status:'ACTIV',   source:'adrnordest.ro',          sourceTier:1, domains:['Antreprenoriat','Infrastructură','Digitalizare'],  beneficiaries:['IMM','UAT','ONG'],          regions:['Nord-Est'],  grantMin:50000,   grantMax:15000000, program:'PR Nord-Est' },
-  { id:14, status:'ACTIV',   source:'afir.ro',                sourceTier:1, domains:['Agricultură'],                                     beneficiaries:['Fermier'],                  regions:[`Național`],  grantMin:10000,   grantMax:300000,   program:'PNDR' },
-  { id:15, status:'ÎNCHIS',  source:'commission.europa.eu',   sourceTier:1, domains:['Cercetare / inovare','Digitalizare'],              beneficiaries:['Universitate','IMM'],       regions:[`Național`],  grantMin:500000,  grantMax:10000000, program:'Horizon Europe' },
-  { id:16, status:'URMEAZĂ', source:'fonduri-structurale.ro', sourceTier:3, domains:['Incluziune socială'],                              beneficiaries:['ONG'],                      regions:[`Național`],  grantMin:50000,   grantMax:400000,   program:'FSE+' },
-  { id:17, status:'ACTIV',   source:'oportunitati-ue.gov.ro', sourceTier:1, domains:['Digitalizare'],                                    beneficiaries:['IMM','Startup'],            regions:[`Național`],  grantMin:30000,   grantMax:500000,   program:'PNRR C7' },
-  { id:18, status:'ÎNCHIS',  source:'startupcafe.ro',         sourceTier:3, domains:['Antreprenoriat'],                                  beneficiaries:['Startup'],                  regions:[`Național`],  grantMin:25000,   grantMax:250000,   program:'Start-Up Nation' },
-  { id:19, status:'ÎNCHIS',  source:'vest.ro',                sourceTier:1, domains:['Antreprenoriat'],                                  beneficiaries:['IMM'],                      regions:['Vest'],      grantMin:200000,  grantMax:2000000,  program:'POR Vest' },
+  { id:1,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Antreprenoriat','Digitalizare'],                  beneficiaries:['IMM','Universitate'],       regions:[`Național`],  grantMin:500000,  grantMax:5000000,  program:'PoCIDIF' , title:'PoCIDIF — HUB Antreprenorial Național (creare/operaționalizare)', summary:'Finanțare pentru crearea sau operaționalizarea unui HUB antreprenorial național — sprijin pentru ecosistemul de inovare, accelerare startup și transfer de cunoștințe.' },
+  { id:2,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Energie'],                                         beneficiaries:['IMM'],                      regions:[`Național`],  grantMin:5000,    grantMax:30000,    program:'PNRR C16' , title:'PNRR C16 REPowerEU — Granturi bonuri valorice energie regenerabilă (gospodării)', summary:'Schema de granturi sub formă de bonuri valorice pentru gospodăriile care instalează sisteme de energie din surse regenerabile. Finanțare 50% grant, 50% împrumut PNRR.' },
+  { id:3,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Mediu'],                                           beneficiaries:['ONG','UAT','Universitate'], regions:[`Național`],  grantMin:100000,  grantMax:3000000,  program:'PDD' , title:'Programul pentru Dezvoltare Durabilă (PDD) — Conservarea speciilor și habitatelor', summary:'Ghid pentru proiecte dedicate menținerii și îmbunătățirii stării de conservare a speciilor și habitatelor prin măsuri de conservare activă și management ecologic.' },
+  { id:4,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Sănătate'],                                        beneficiaries:['UAT','Universitate'],       regions:[`Național`],  grantMin:1000000, grantMax:50000000, program:'Programul Sănătate' , title:'Programul Sănătate — Infrastructură PNRR unități sanitare (ghid actualizat)', summary:'Finanțare pentru construcția, dotarea și modernizarea unităților sanitare publice, cu accent pe reducerea disparităților regionale în accesul la servicii medicale.' },
+  { id:5,  status:'ACTIV',   source:'mfe.gov.ro',             sourceTier:1, domains:['Incluziune socială'],                              beneficiaries:['ONG','UAT'],                regions:[`Național`],  grantMin:50000,   grantMax:500000,   program:'PoIDS' , title:'PoIDS — Servicii comunitare pentru copii și familii (ITI Moții, Țara de Piatră)', summary:'Sprijin pentru servicii comunitare destinate copiilor și familiilor aflate în situații de risc, prevenirea separării și reintegrarea în familie.' },
+  { id:6,  status:'URMEAZĂ', source:'mfe.gov.ro',             sourceTier:1, domains:['Energie','Infrastructură'],                        beneficiaries:['UAT','IMM'],                regions:[`Național`],  grantMin:200000,  grantMax:10000000, program:'PTJ' , title:'PTJ — Mobilitate verde și energie accesibilă (apeluri competitive + necompetitive)', summary:'Apeluri competitive și necompetitive pentru "Energie verde accesibilă și mobilitate nepoluantă", Prioritățile 1-6, metodologii aprobate feb. 2026.' },
+  { id:7,  status:'ÎNCHIS',  source:'adrvest.ro',             sourceTier:1, domains:['Antreprenoriat','Energie'],                        beneficiaries:['IMM'],                      regions:['Vest'],      grantMin:50000,   grantMax:2000000,  program:'PTJ IMM' , title:'ADR Vest — Investiții IMM Valea Jiului (Tranziție Justă)', summary:'Finanțare pentru investiții productive în IMM-uri din Valea Jiului. Sprijin pentru diversificarea economică în zonele afectate de tranziția de la cărbune.' },
+  { id:8,  status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Infrastructură','Antreprenoriat'],                 beneficiaries:['UAT','IMM'],                regions:['Vest'],      grantMin:1000000, grantMax:20000000, program:'PTJ Parcuri' , title:'ADR Vest — Parcuri industriale și tehnologice (Tranziție Justă)', summary:'Sprijin pentru crearea și dezvoltarea parcurilor industriale și tehnologice în Regiunea Vest, pentru atragerea de investiții și locuri de muncă.' },
+  { id:9,  status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Energie'],                                         beneficiaries:['IMM','UAT'],                regions:['Vest'],      grantMin:200000,  grantMax:10000000, program:'PTJ Energie' , title:'ADR Vest — Energie regenerabilă Tranziție Justă', summary:'Finanțare pentru dezvoltarea surselor de energie regenerabilă în Regiunea Vest — eolian, solar, biomasă — ca parte a tranziției economice.' },
+  { id:10, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Antreprenoriat','Digitalizare'],                   beneficiaries:['Startup'],                  regions:['Vest'],      grantMin:50000,   grantMax:100000,   program:'Vest Ventures' , title:'ADR Vest — Vest Ventures: Fond de accelerare startup (până la €100K/startup)', summary:'Primul accelerator regional cu finanțare europeană — 9 startup-uri selectate în prima cohortă. Investiții de până la €100K per startup, plus mentorat și acces la piață.' },
+  { id:11, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Cultură','Turism'],                                beneficiaries:['UAT','ONG'],                regions:['Vest'],      grantMin:200000,  grantMax:4000000,  program:'PR Vest UNESCO' , title:'ADR Vest — Patrimoniu cultural UNESCO Vest (€4M)', summary:'Fonduri europene pentru protejarea și valorificarea obiectivelor de patrimoniu cultural UNESCO din Regiunea Vest — restaurare, digitalizare și promovare turistică.' },
+  { id:12, status:'ACTIV',   source:'adrvest.ro',             sourceTier:1, domains:['Sănătate'],                                        beneficiaries:['UAT'],                      regions:['Vest'],      grantMin:1000000, grantMax:3000000,  program:'PR Vest Sănătate' , title:'ADR Vest — Spital Copii "Louis Țurcanu" Timișoara (~€3M)', summary:'Investiție europeană de aproape €3M în dotarea și modernizarea Spitalului de Copii din Timișoara, principala unitate pediatrică a Regiunii Vest.' },
+  { id:13, status:'ACTIV',   source:'adrnordest.ro',          sourceTier:1, domains:['Antreprenoriat','Infrastructură','Digitalizare'],  beneficiaries:['IMM','UAT','ONG'],          regions:['Nord-Est'],  grantMin:50000,   grantMax:15000000, program:'PR Nord-Est' , title:'ADR Nord-Est — Fonduri europene Regiunea Nord-Est 2021-2027', summary:'Portal oficial al ADR Nord-Est cu apeluri active pentru IMM-uri, UAT-uri și ONG-uri din județele Bacău, Botoșani, Iași, Neamț, Suceava și Vaslui.' },
+  { id:14, status:'ACTIV',   source:'afir.ro',                sourceTier:1, domains:['Agricultură'],                                     beneficiaries:['Fermier'],                  regions:[`Național`],  grantMin:10000,   grantMax:300000,   program:'PNDR' , title:'PNDR — Investiții în exploatații agricole mici și medii', summary:'Finanțare pentru modernizarea exploatațiilor agricole: utilaje, irigații, construcții ferme, procesare produse agricole, standarde UE.' },
+  { id:15, status:'ÎNCHIS',  source:'commission.europa.eu',   sourceTier:1, domains:['Cercetare / inovare','Digitalizare'],              beneficiaries:['Universitate','IMM'],       regions:[`Național`],  grantMin:500000,  grantMax:10000000, program:'Horizon Europe' , title:'Horizon Europe — Parteneriate cercetare și inovare', summary:'Cel mai amplu program european de cercetare și inovare — parteneriate transnaționale în sănătate, digital, energie, mobilitate și climă.' },
+  { id:16, status:'URMEAZĂ', source:'fonduri-structurale.ro', sourceTier:3, domains:['Incluziune socială'],                              beneficiaries:['ONG'],                      regions:[`Național`],  grantMin:50000,   grantMax:400000,   program:'FSE+' , title:'FSE+ — Inovare socială și economie socială (ONG-uri)', summary:'Program estimat pentru sprijinirea ONG-urilor și întreprinderilor sociale cu proiecte de incluziune a grupurilor vulnerabile, inserție profesională și servicii sociale.' },
+  { id:17, status:'ACTIV',   source:'oportunitati-ue.gov.ro', sourceTier:1, domains:['Digitalizare'],                                    beneficiaries:['IMM','Startup'],            regions:[`Național`],  grantMin:30000,   grantMax:500000,   program:'PNRR C7' , title:'Sprijin IMM — Digitalizare și transformare digitală (PNRR C7)', summary:'Finanțare nerambursabilă pentru IMM-uri care implementează soluții digitale, automatizare, cloud computing și securitate cibernetică.' },
+  { id:18, status:'ÎNCHIS',  source:'startupcafe.ro',         sourceTier:3, domains:['Antreprenoriat'],                                  beneficiaries:['Startup'],                  regions:[`Național`],  grantMin:25000,   grantMax:250000,   program:'Start-Up Nation' , title:'Start-Up Nation România — Granturi afaceri noi', summary:'Program de finanțare pentru antreprenori la debut. Grant maxim 250.000 RON pentru echipamente, amenajare spații, stoc și marketing.' },
+  { id:19, status:'ÎNCHIS',  source:'vest.ro',                sourceTier:1, domains:['Antreprenoriat'],                                  beneficiaries:['IMM'],                      regions:['Vest'],      grantMin:200000,  grantMax:2000000,  program:'POR Vest' , title:'POR Vest — Clustere inovative regionale', summary:'Apel finalizat pentru sprijinirea clusterelor de inovare și competitivitate din Regiunea Vest. Informativ pentru sesiunile viitoare.' },
 
-  { id:20, status:'URMEĂZĂ', source:'eeagrants.ro', sourceTier:1, domains:['Mediu','Educație','Sănătate','Cercetare / inovare','Incluziune socială','Cultură'], beneficiaries:['ONG','IMM','UAT','Universitate'], regions:[`Național`], grantMin:50000, grantMax:5000000, program:'Granturi SEE & Norvegiene' },];
+  { id:20, status:'URMEĂZĂ', source:'eeagrants.ro', sourceTier:1, domains:['Mediu','Educație','Sănătate','Cercetare / inovare','Incluziune socială','Cultură'], beneficiaries:['ONG','IMM','UAT','Universitate'], regions:[`Național`], grantMin:50000, grantMax:5000000, program:'Granturi SEE & Norvegiene' , title:'Granturi SEE & Norvegiene 2021–2028 — Noul ciclu (apeluri în pregătire)', summary:'Islanda, Liechtenstein și Norvegia finanțează proiecte în România. Ciclul 2014-2021 s-a încheiat; noul ciclu 2021-2028 este în negociere — apeluri estimate în a doua jumătate a lui 2026.' },];
 
 
 /* ═══ CRAWLING LAYER — Firecrawl + KV ═══
@@ -2856,7 +2933,7 @@ function prefilterOpps(profile) {
   const { orgType, domains = [], region, projectSize } = profile;
   return API_OPPORTUNITIES.filter(o => {
     if (o.status === 'ÎNCHIS') return false;
-    if (orgType && o.beneficiaries.length && !o.beneficiaries.includes(orgType)) return false;
+    if (orgType && orgType !== '' && o.beneficiaries.length && !o.beneficiaries.includes(orgType)) return false;
     if (region && region !== 'Oricare' && o.regions.length &&
         !o.regions.includes(region) && !o.regions.includes('Național')) return false;
     if (domains.length && !domains.some(d => o.domains.includes(d))) return false;
@@ -2875,6 +2952,12 @@ function ruleScore(o, profile) {
   if (profile.region && (o.regions.includes(profile.region) || o.regions.includes('Național'))) s += 15;
   if (o.status === 'ACTIV') s += 10;
   if (profile.projectSize > 0 && o.grantMax >= profile.projectSize) s += 5;
+  if (profile.description) {
+    const words = profile.description.toLowerCase().split(/[^a-zăâîșț0-9]+/).filter(x => x.length > 4);
+    const hay = ((o.title||'') + ' ' + o.program + ' ' + o.domains.join(' ') + ' ' + o.beneficiaries.join(' ') + ' ' + (o.summary||'')).toLowerCase();
+    const hits = new Set(words.filter(x => hay.includes(x))).size;
+    s += Math.min(hits * 4, 20);
+  }
   return Math.min(s, 100);
 }
 
@@ -2893,14 +2976,16 @@ async function aiRank(profile, candidates, env) {
   if (!key || !candidates.length) return null;
 
   const slim = candidates.map(o => ({
-    id: o.id, program: o.program, status: o.status,
+    id: o.id, title: o.title || o.program, program: o.program, status: o.status,
     domains: o.domains, beneficiaries: o.beneficiaries, regions: o.regions,
     grantMin: o.grantMin, grantMax: o.grantMax, cofinancing: o.cofinancing,
     summary: (o.summary || '').slice(0, 240),
   }));
 
-  const sys = 'Ești consultant de finanțări din România. Primești profilul unui aplicant și o listă de programe de finanțare (candidate). '
-    + 'Clasifică programele de la cel mai potrivit la cel mai puțin potrivit pentru acest aplicant. '
+  const sys = 'Ești consultant de finanțări din România. Primești descrierea liberă a unui proiect (câmpul description — sursa principală de adevăr), '
+    + 'eventual câteva indicii structurate, și o listă de programe candidate. '
+    + 'Deduce din descriere tipul de organizație, domeniul, regiunea, mărimea proiectului și nevoia reală, chiar dacă indiciile structurate lipsesc. '
+    + 'Clasifică programele de la cel mai potrivit la cel mai puțin potrivit. În reason spune concret CE din descriere se potrivește cu CE din program (ex: „panouri fotovoltaice pe fermă → PNRR C16 finanțează SRE pentru IMM"). '
     + 'Răspunde DOAR cu JSON valid, fără markdown, de forma: '
     + '{"matches":[{"id":<number>,"score":<0-100>,"reason":"<o singură propoziție în română, max 20 cuvinte>"}]}. '
     + 'Include doar programe relevante (score >= 40). Ordonează descrescător după score.';
