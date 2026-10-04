@@ -146,3 +146,6 @@ vite.config.ts.timestamp-*
 
 .wrangler
 .DS_Store
+# Local Worker secrets
+.dev.vars
+.dev.vars.*

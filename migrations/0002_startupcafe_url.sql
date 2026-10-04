@@ -1,0 +1,1 @@
+UPDATE financing_sources SET url='https://startupcafe.ro/c/finantari', changed_by='migration:startupcafe', revision=revision+1, updated_at=CURRENT_TIMESTAMP WHERE id='startupcafe.ro' AND url='https://www.startupcafe.ro/finantari';

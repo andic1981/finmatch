@@ -19,5 +19,13 @@
     "crons": [
       "0 5 * * *"
     ]
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "FINMATCH_DB",
+      "database_name": "financingmatch-sources",
+      "database_id": "a91f5fd6-ec03-4605-aa56-34533aefecd1",
+      "migrations_dir": "migrations"
+    }
+  ]
 }

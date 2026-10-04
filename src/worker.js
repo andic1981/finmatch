@@ -1,3 +1,5 @@
+import { handleSources, listSources, requireAdmin, sourceJson } from './source-management.js';
+import { ADMIN_SOURCES_JS } from './admin/sources-ui.js';
 /**
  * FinMatch România — Cloudflare Worker v2.1
  */
@@ -961,6 +963,7 @@ footer strong { color: rgba(255,255,255,0.65); font-weight: 500; }
 .cal-grant { font-family: var(--font-head); font-weight: 700; font-size: 13px; }
 @media (max-width: 768px) { .cal-row { grid-template-columns: 48px 1fr; } .cal-right { display: none; } }
 </style>
+<script defer src="/admin-sources.js"></script>
 </head>
 <body>
 
@@ -1464,7 +1467,7 @@ const SOURCES = {
   },
   'startupcafe.ro': {
     name: 'StartupCafe', tier: 3, status: 'ok', note: 'Sursă editorială — crawling live via Firecrawl', opps: 1,
-    pages: ['https://www.startupcafe.ro/finantari']
+    pages: ['https://startupcafe.ro/c/finantari']
   },
   'eeagrants.ro': {
     name: 'Granturi SEE & Norvegiene', tier: 1, status: 'warn',
@@ -2301,60 +2304,7 @@ function removeAlert(i) {
 }
 
 /* ── Sources view ────────────────────────────────────────────────────────── */
-async function renderSources() {
-  const container = document.getElementById('sources-grid');
-  let live = {}, lastRun = null;
-  try { const r = await fetch('/api/sources'); if (r.ok) { const j = await r.json(); live = j.sources || {}; lastRun = j.lastFullRun; } } catch(e) {}
-  window.__lastCrawl = lastRun;
-  const merged = {};
-  for (const [h, s] of Object.entries(SOURCES)) {
-    const l = live[h];
-    merged[h] = l ? Object.assign({}, s, { status: l.status, lastRun: l.lastRun, chars: l.chars, error: l.error }) : s;
-  }
-  // Custom sources added from Admin (not in the static SOURCES map)
-  try {
-    const rr = await fetch('/api/sources'); const jj = rr.ok ? await rr.json() : {};
-    for (const s of (jj.registry || [])) {
-      if (merged[s.host] || !s.enabled) continue;
-      const l = live[s.host] || {};
-      merged[s.host] = { name: s.name, tier: s.tier, status: l.status || 'warn', note: s.builtin ? 'Surs\u0103 monitorizat\u0103' : 'Ad\u0103ugat\u0103 manual din Admin', opps: (l.published||0), pages: [s.url], lastRun: l.lastRun, error: l.error };
-    }
-  } catch(e) {}
-  const srcList = Object.entries(merged);
-  const okCount = srcList.filter(([,s])=>s.status==='ok').length;
-  const warnCount = srcList.filter(([,s])=>s.status==='warn').length;
-  const errCount = srcList.filter(([,s])=>s.status==='err').length;
-
-  container.innerHTML = \`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:2rem;">
-      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent);">\${okCount}</div><div class="admin-stat-label">Surse OK</div></div>
-      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--warn);">\${warnCount}</div><div class="admin-stat-label">Avertismente</div></div>
-      <div class="admin-stat"><div class="admin-stat-val" style="color:var(--accent2);">\${errCount}</div><div class="admin-stat-label">Erori</div></div>
-      <div class="admin-stat"><div class="admin-stat-val">\${OPPORTUNITIES.length}</div><div class="admin-stat-label">Oportunități indexate</div></div>
-    </div>
-    \${srcList.map(([id, s]) => \`
-      <div class="source-card">
-        <div class="source-indicator \${s.status}"></div>
-        <div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
-            <strong style="font-size:14px;">\${s.name}</strong>
-            <span style="font-size:11px;background:\${s.tier===1?'var(--accent-light)':'var(--surface2)'};color:\${s.tier===1?'var(--accent)':'var(--ink3)'};padding:2px 7px;border-radius:100px;">Tier \${s.tier}</span>
-            <span style="font-size:11px;background:\${s.status==='ok'?'var(--accent-light)':s.status==='warn'?'var(--warn-light)':'var(--accent2-light)'};color:\${s.status==='ok'?'var(--accent)':s.status==='warn'?'var(--warn)':'var(--accent2)'};padding:2px 7px;border-radius:100px;">\${s.status==='ok'?'Activ':s.status==='warn'?'Avertisment':'Eroare'}</span>
-          </div>
-          <div style="font-size:12px;color:var(--ink3);margin-bottom:6px;">\${s.note}</div>
-          <div style="font-size:11px;color:var(--ink3);">Pagini monitorizate: \${s.pages.length} &nbsp;·&nbsp; Oportunități: \${s.opps}</div>
-          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">
-            \${s.pages.map(p=>\`<a href="\${p}" target="_blank" style="font-size:11px;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;display:inline-block;">\${p.replace('https://','')}</a>\`).join('')}
-          </div>
-        </div>
-        <div style="text-align:right;font-size:12px;color:var(--ink3);white-space:nowrap;flex-shrink:0;">
-          <div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:var(--ink);">\${s.opps}</div>
-          <div>intrări</div>
-        </div>
-      </div>
-    \`).join('')}
-  \`;
-}
+async function renderSources() { return window.renderManagedPublicSources(); }
 
 /* ── Admin view ──────────────────────────────────────────────────────────── */
 function renderAdmin() {
@@ -2446,64 +2396,7 @@ function switchAdminTab(tab, btn) {
     \`).join('') : '<div class="empty-state" style="padding:2rem;"><h3>Review queue gol</h3><p>Toate oportunitățile au confidence ridicat.</p></div>';
   }
 
-  if (tab === 'sources') {
-    c.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p>Se încarcă sursele...</p></div>';
-    fetch('/api/sources').then(r => r.json()).then(function(j) {
-      const reg = (j.registry || []);
-      const live = j.sources || {};
-      const known = new Set(reg.map(s => s.host));
-      const suggestions = SOURCE_SUGGESTIONS.filter(s => !known.has(s.host));
-
-      const form = '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.375rem;margin-bottom:1.25rem;box-shadow:var(--shadow-sm);">'
-        + '<div style="font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:10px;">+ Adaugă sursă nouă</div>'
-        + '<div style="display:grid;grid-template-columns:2fr 1.2fr;gap:10px;margin-bottom:10px;">'
-        + '<input id="src-url" class="wl-input" placeholder="https://exemplu.ro/apeluri (pagina cu lista de apeluri)">'
-        + '<input id="src-name" class="wl-input" placeholder="Nume afișat (opțional)">'
-        + '</div>'
-        + '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'
-        + '<select id="src-tier" class="wl-input" style="width:auto;"><option value="1">Tier 1 — Oficială</option><option value="2" selected>Tier 2 — Instituție / regională</option><option value="3">Tier 3 — Editorială</option></select>'
-        + '<select id="src-proxy" class="wl-input" style="width:auto;"><option value="auto" selected>Proxy: auto</option><option value="stealth">Proxy: stealth (anti-bot)</option><option value="enhanced">Proxy: enhanced</option></select>'
-        + '<button id="src-add-btn" onclick="addSource()" style="margin-left:auto;padding:10px 18px;background:linear-gradient(135deg,var(--accent) 0%,var(--sky) 130%);color:white;border:none;border-radius:var(--radius);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;">Adaugă & crawlează</button>'
-        + '</div>'
-        + '<div style="font-size:11px;color:var(--ink3);margin-top:8px;">Sfat: folosește pagina care listează apelurile (nu homepage-ul). Sursa e crawl-ată imediat ca să vezi dacă e accesibilă.</div>'
-        + '</div>';
-
-      const quick = suggestions.length ? '<div style="margin-bottom:1.25rem;">'
-        + '<div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Surse recomandate — adaugă cu un click</div>'
-        + '<div style="display:flex;flex-wrap:wrap;gap:6px;">'
-        + suggestions.map(s => '<button class="quick-tag" title="' + s.url + '" onclick="quickAddSource(\\'' + s.url + '\\',\\'' + s.name.replace(/\\'/g, '') + '\\',' + s.tier + ',this)">+ ' + s.name + '</button>').join('')
-        + '</div></div>' : '';
-
-      const rows = reg.map(function(s) {
-        const l = live[s.host] || {};
-        const st = l.status || 'warn';
-        const stLabel = l.status ? (st === 'ok' ? 'OK' : st === 'warn' ? 'Avertisment' : 'Eroare') : 'Necrawlat';
-        const when = l.lastRun ? new Date(l.lastRun).toLocaleDateString('ro-RO') : '—';
-        const extra = (l.published || l.queued) ? (' · ' + (l.published||0) + ' publicate, ' + (l.queued||0) + ' review') : (l.chars ? ' · ' + l.chars + ' car.' : '');
-        return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;opacity:' + (s.enabled ? '1' : '.55') + ';">'
-          + '<div class="source-indicator ' + (s.enabled ? st : 'warn') + '"></div>'
-          + '<div style="flex:1;min-width:0;">'
-          + '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><strong style="font-size:13px;">' + s.name + '</strong>'
-          + '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:1px 7px;border-radius:100px;">Tier ' + s.tier + '</span>'
-          + (s.builtin ? '' : '<span style="font-size:10px;background:var(--accent-light);color:var(--accent);padding:1px 7px;border-radius:100px;">manual</span>')
-          + (s.enabled ? '' : '<span style="font-size:10px;background:var(--surface2);color:var(--ink3);padding:1px 7px;border-radius:100px;">dezactivată</span>')
-          + '</div>'
-          + '<div style="font-size:11.5px;color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><a href="' + s.url + '" target="_blank" style="color:var(--ink3);">' + s.url.replace(/^https?:\\/\\//, '') + '</a></div>'
-          + '<div style="font-size:11px;color:var(--ink3);margin-top:2px;">' + stLabel + ' · ' + when + extra + (l.error ? ' · <span style="color:var(--accent2);">' + l.error + '</span>' : '') + '</div>'
-          + '</div>'
-          + '<div style="display:flex;gap:6px;flex-shrink:0;">'
-          + '<button onclick="recrawlSource(\\'' + s.host + '\\', this)" ' + (s.enabled ? '' : 'disabled ') + 'style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Re-crawl</button>'
-          + '<button onclick="toggleSource(\\'' + s.host + '\\', this)" style="font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--ink2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">' + (s.enabled ? 'Dezactivează' : 'Activează') + '</button>'
-          + (s.builtin ? '' : '<button onclick="removeSource(\\'' + s.host + '\\', this)" style="font-size:11px;background:var(--accent2-light);border:1px solid rgba(249,115,22,.25);color:var(--accent2);padding:5px 10px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Șterge</button>')
-          + '</div></div>';
-      }).join('');
-
-      c.innerHTML = form + quick
-        + '<div style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Surse monitorizate (' + reg.length + ')</div>'
-        + rows;
-    }).catch(function() { c.innerHTML = '<div class="empty-state" style="padding:2rem;"><p>Eroare la încărcarea surselor.</p></div>'; });
-    return;
-  }
+  if (tab === 'sources') { window.renderManagedSources(); return; }
   if (tab === '__old_sources__') {
     c.innerHTML = Object.entries(SOURCES).map(([id, s]) => \`
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
@@ -3082,7 +2975,7 @@ const CRAWL_SOURCES = [
   { host: 'commission.europa.eu',   url: 'https://commission.europa.eu/funding-tenders/find-funding/eu-funding-programmes_ro', tier: 1, proxy: 'auto' },
   { host: 'cinea.ec.europa.eu',     url: 'https://cinea.ec.europa.eu/funding-and-tenders_en', tier: 1, proxy: 'auto' },
   { host: 'fonduri-structurale.ro', url: 'https://www.fonduri-structurale.ro', tier: 3, proxy: 'auto' },
-  { host: 'startupcafe.ro',         url: 'https://www.startupcafe.ro/finantari', tier: 3, proxy: 'auto' },
+  { host: 'startupcafe.ro',         url: 'https://startupcafe.ro/c/finantari', tier: 3, proxy: 'auto' },
   { host: 'eeagrants.ro',           url: 'https://www.eeagrants.ro/apeluri?filtru_status=Activ', tier: 1, proxy: 'auto' },
 ];
 
@@ -3387,6 +3280,10 @@ async function crawlOne(src, env) {
       await env.FINMATCH_KV.put('src:status', JSON.stringify(map));
     } catch (e) { entry.error = 'KV: ' + String(e && e.message || e); }
   }
+  if (env.FINMATCH_DB && src.id) {
+    await env.FINMATCH_DB.prepare('UPDATE financing_sources SET last_scan=?,last_successful_scan=CASE WHEN ? THEN ? ELSE last_successful_scan END WHERE id=? AND revision=?')
+      .bind(entry.lastRun, r.ok ? 1 : 0, entry.lastRun, src.id, src.revision).run();
+  }
   return { host: src.host, ...entry };
 }
 
@@ -3406,6 +3303,7 @@ async function getDisabledHosts(env) {
   try { const r = await env.FINMATCH_KV.get('sources:disabled'); return r ? JSON.parse(r) : []; } catch (e) { return []; }
 }
 async function getAllSources(env, includeDisabled) {
+  if (env.FINMATCH_DB) return listSources(env, !!includeDisabled);
   const custom = await getCustomSources(env);
   const disabled = new Set(await getDisabledHosts(env));
   const seen = new Set();
@@ -3716,6 +3614,17 @@ export default {
     const { pathname } = url;
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
+    if (pathname === '/admin-sources.js') return new Response(ADMIN_SOURCES_JS, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    const sourceAdmin = pathname === '/api/admin/sources' || pathname.startsWith('/api/admin/sources/');
+    const legacySourceWrite = ['/api/sources/add', '/api/sources/remove', '/api/sources/toggle'].includes(pathname);
+    const otherAdmin = pathname === '/api/recrawl' || pathname === '/api/review' || pathname.startsWith('/api/review/') || pathname.startsWith('/api/published/') || pathname === '/api/alerts/send-digests';
+    if (sourceAdmin || legacySourceWrite || otherAdmin) {
+      const admin = await requireAdmin(request, env, getSession);
+      if (admin instanceof Response) return admin;
+      if (sourceAdmin) return handleSources(request, env, ctx, admin, crawlOne);
+      if (legacySourceWrite) return sourceJson({ error: 'Folosiți Admin → Surse și /api/admin/sources.' }, 410);
+    }
+
 
     if (pathname === '/api/search') {
       const q = (url.searchParams.get('q') || '').toLowerCase().trim();
@@ -3765,7 +3674,7 @@ export default {
         } catch (e) {}
       }
       const registry = await getAllSources(env, true);
-      return jsonResp({ sources: map, lastFullRun, registry: registry.map(s => ({ host: s.host, url: s.url, name: s.name || s.host, tier: s.tier, proxy: s.proxy || 'auto', builtin: !!s.builtin, enabled: s.enabled !== false })) });
+      return jsonResp({ sources: map, lastFullRun, registry: registry.map(s => ({ host: s.host, url: s.url, name: s.name || s.host, tier: s.tier, proxy: s.proxy || 'auto', builtin: !!s.builtin, enabled: s.enabled !== false, type: s.type, status: s.status, last_checked: s.last_checked, last_successful_scan: s.last_successful_scan })) });
     }
 
     // ── Auth ──
@@ -3930,64 +3839,13 @@ export default {
       return jsonResp({ ok: true, ...r });
     }
 
-    // ── Source management ──
-    // POST /api/sources/add  {url, name?, tier?, proxy?}  → adds custom source (and crawls it once)
-    if (pathname === '/api/sources/add') {
-      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
-      let b; try { b = await request.json(); } catch (e) { return jsonResp({ error: 'JSON invalid' }, 400); }
-      let u = String(b.url || '').trim();
-      if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
-      const host = hostFromUrl(u);
-      if (!host || !host.includes('.')) return jsonResp({ error: 'URL invalid' }, 400);
-      const all = await getAllSources(env, true);
-      if (all.find(s => s.host === host)) return jsonResp({ error: 'Sursa exist\u0103 deja: ' + host }, 409);
-      const tier = [1, 2, 3].includes(Number(b.tier)) ? Number(b.tier) : 2;
-      const proxy = ['auto', 'basic', 'stealth', 'enhanced'].includes(b.proxy) ? b.proxy : 'auto';
-      const src = { host, url: u, name: String(b.name || host).trim().slice(0, 80), tier, proxy, enabled: true, addedAt: new Date().toISOString() };
-      const custom = await getCustomSources(env);
-      custom.push(src);
-      await putCustomSources(env, custom);
-      // Crawl right away so the user sees whether the site is reachable.
-      const result = b.crawlNow === false ? null : await crawlOne(src, env);
-      return jsonResp({ ok: true, source: src, crawl: result });
-    }
-    // POST /api/sources/remove?host=   (custom only)
-    if (pathname === '/api/sources/remove') {
-      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
-      const host = url.searchParams.get('host');
-      const custom = await getCustomSources(env);
-      const next = custom.filter(s => s.host !== host);
-      if (next.length === custom.length) return jsonResp({ error: 'Doar sursele ad\u0103ugate manual pot fi \u0219terse' }, 400);
-      await putCustomSources(env, next);
-      // Drop its cached status/raw
-      if (env.FINMATCH_KV) { try {
-        const raw = await env.FINMATCH_KV.get('src:status'); const map = raw ? JSON.parse(raw) : {};
-        delete map[host]; await env.FINMATCH_KV.put('src:status', JSON.stringify(map));
-        await env.FINMATCH_KV.delete('src:raw:' + host);
-      } catch (e) {} }
-      return jsonResp({ ok: true, host });
-    }
-    // POST /api/sources/toggle?host=   (works for built-in and custom)
-    if (pathname === '/api/sources/toggle') {
-      if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
-      const host = url.searchParams.get('host');
-      const custom = await getCustomSources(env);
-      const c = custom.find(s => s.host === host);
-      if (c) { c.enabled = c.enabled === false; await putCustomSources(env, custom); return jsonResp({ ok: true, host, enabled: c.enabled }); }
-      if (!CRAWL_SOURCES.find(s => s.host === host)) return jsonResp({ error: 'Surs\u0103 necunoscut\u0103' }, 404);
-      const disabled = await getDisabledHosts(env);
-      const i = disabled.indexOf(host);
-      if (i >= 0) disabled.splice(i, 1); else disabled.push(host);
-      if (env.FINMATCH_KV) { try { await env.FINMATCH_KV.put('sources:disabled', JSON.stringify(disabled)); } catch (e) {} }
-      return jsonResp({ ok: true, host, enabled: i >= 0 });
-    }
-
     if (pathname === '/api/recrawl') {
       if (request.method !== 'POST') return jsonResp({ error: 'Use POST' }, 405);
       const host = url.searchParams.get('host');
       if (host) {
         const src = (await getAllSources(env, true)).find(s => s.host === host);
         if (!src) return jsonResp({ error: 'Sursa necunoscuta: ' + host }, 404);
+        if (!src.enabled) return jsonResp({ error: 'Sursa este dezactivată.' }, 409);
         const result = await crawlOne(src, env);
         return jsonResp({ ok: result.status !== 'err', result });
       }

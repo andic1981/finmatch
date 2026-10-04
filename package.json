@@ -1,1 +1,17 @@
-{"name":"finmatch","version":"2.4.0","private":true,"scripts":{"deploy":"wrangler deploy"},"devDependencies":{"wrangler":"^3"}}
+{
+  "name": "finmatch",
+  "version": "2.5.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy --config wrangler.toml",
+    "dev": "wrangler dev --config wrangler.toml",
+    "test": "node --test",
+    "db:migrate:local": "wrangler d1 migrations apply FINMATCH_DB --local --config wrangler.toml",
+    "db:migrate:remote": "wrangler d1 migrations apply FINMATCH_DB --remote --config wrangler.toml",
+    "build": "wrangler deploy --dry-run --config wrangler.toml"
+  },
+  "devDependencies": {
+    "wrangler": "^3"
+  },
+  "type": "module"
+}
