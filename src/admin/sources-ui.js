@@ -18,6 +18,7 @@ export const ADMIN_SOURCES_JS = String.raw`
       root.replaceChildren(el('p', 'Surse monitorizate: ' + sources.length));
       for (const s of sources) {
         const card = el('section'); card.className = 'source-card';
+        card.style.gridTemplateColumns = 'minmax(0, 1fr)';
         const content = el('div'); content.style.cssText = 'min-width:0;overflow-wrap:anywhere;';
         content.append(el('strong', s.name));
         content.append(el('p', 'Tier ' + s.tier + ' · ' + (typeLabels[s.type] || 'Sursă monitorizată')));
