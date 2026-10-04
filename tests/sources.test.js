@@ -170,3 +170,18 @@ test('UI script and embedded application scripts parse', async () => {
   assert.match(html,/admin-sources\.js/);
   for(const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) if(match[1].trim()) new Script(match[1]);
 });
+
+test('publishing a discovery removes it from the queue and returns its persisted catalogue record', async () => {
+  const {call,values,sqlite} = setup();
+  const pending={id:9001,title:'Pending discovery',source:'funding.ro',status:'URMEAZĂ',_auto:true};
+  values.set('opps:review',JSON.stringify({'9001':pending}));
+  const before=await call('/api/review'); assert.equal(before.data.count,1);
+  const result=await call('/api/review/approve?id=9001','POST');
+  assert.equal(result.status,200); assert.equal(result.data.item.id,9001); assert.equal(result.data.item.status,'ACTIV');
+  assert.deepEqual(JSON.parse(values.get('opps:review')),{});
+  assert.equal(JSON.parse(values.get('opps:published'))['9001'].title,pending.title);
+  assert.equal((await call('/api/review')).data.count,0);
+  assert.equal((await call('/api/opportunities')).data.opportunities[0].id,9001);
+  assert.equal((await call('/api/review/approve?id=9001','POST')).status,404);
+  sqlite.close();
+});

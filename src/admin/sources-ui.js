@@ -29,6 +29,57 @@ export const ADMIN_SOURCES_JS = String.raw`
       if (!sources.length) root.append(el('p', 'Nu există surse active.'));
     } catch(e) { root.replaceChildren(el('p',e.message)); }
   };
+  const publishedHere = new Set();
+  let discoveriesVersion = 0;
+  window.renderNewDetected = async function () {
+    const root = document.getElementById('admin-content');
+    const version = ++discoveriesVersion;
+    const active = () => version === discoveriesVersion && currentAdminTab === 'new';
+    root.replaceChildren(el('p', 'Se încarcă oportunitățile detectate…'));
+    try {
+      const response = await fetch('/api/review', { credentials: 'same-origin', cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Nu am putut încărca oportunitățile.');
+      if (!active()) return;
+      const items = (data.items || []).filter(o => !publishedHere.has(String(o.id)))
+        .sort((a,b) => String(b._extractedAt || '').localeCompare(String(a._extractedAt || '')));
+      root.replaceChildren();
+      root.append(el('p', 'Oportunități detectate în așteptarea publicării. Cele deja publicate sunt disponibile în căutare.'));
+      const refresh = el('button', 'Reîncarcă'); refresh.onclick = () => window.renderNewDetected(); root.append(refresh);
+      const count = el('p'); root.append(count);
+      const notice = el('p'); notice.setAttribute('role','status'); root.append(notice);
+      const list = el('div'); root.append(list);
+      function updateCount() {
+        count.textContent = 'În așteptare: ' + list.children.length;
+        if (!list.children.length) notice.textContent = 'Nu există oportunități noi de publicat.';
+      }
+      for (const item of items) {
+        const card = el('section'); card.style.cssText = 'padding:16px;margin:10px 0;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere;';
+        card.append(el('strong', item.title || item.program || 'Oportunitate detectată'));
+        card.append(el('p', (item.source || '—') + ' · Detectată: ' + (item._extractedAt || '—')));
+        const details = el('button', 'Detalii'); const summary = el('p', item.summary || 'Nu există descriere.'); summary.hidden = true;
+        details.onclick = () => { summary.hidden = !summary.hidden; }; card.append(details);
+        const publish = el('button', 'Publică'); publish.style.marginLeft = '8px'; card.append(publish); card.append(summary);
+        publish.onclick = async () => {
+          publish.disabled = true; publish.textContent = 'Se publică…'; notice.textContent = '';
+          try {
+            const r = await fetch('/api/review/approve?id=' + encodeURIComponent(item.id), { method:'POST', credentials:'same-origin' });
+            const result = await r.json();
+            if (!r.ok || !result.ok) throw new Error(result.error || 'Publicarea a eșuat.');
+            publishedHere.add(String(item.id));
+            acceptPublishedOpportunity(result.item || item);
+            card.remove();
+            if (active()) { updateCount(); showToast('✓ Publicată în index'); }
+          } catch(e) {
+            if (active()) notice.textContent = e.message;
+            publish.disabled = false; publish.textContent = 'Publică';
+          }
+        };
+        list.append(card);
+      }
+      updateCount();
+    } catch(e) { if (active()) root.replaceChildren(el('p',e.message)); }
+  };
   window.renderManagedSources = async function () {
     const root = document.getElementById('admin-content');
     root.replaceChildren(el('p', 'Se încarcă sursele…'));
