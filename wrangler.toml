@@ -19,3 +19,11 @@ id = "8744b18f2c244f23a1fc7f2d842b0947"
 # Daily crawl at 05:00 UTC
 [triggers]
 crons = ["0 5 * * *"]
+
+# Set ADMIN_EMAILS via `wrangler secret put ADMIN_EMAILS --config wrangler.toml`.
+[[d1_databases]]
+binding = "FINMATCH_DB"
+database_name = "financingmatch-sources"
+# Existing FinancingMatch D1 database.
+database_id = "a91f5fd6-ec03-4605-aa56-34533aefecd1"
+migrations_dir = "migrations"
