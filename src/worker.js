@@ -2414,21 +2414,7 @@ function switchAdminTab(tab, btn) {
     \`).join('');
   }
 
-  if (tab === 'new') {
-    const recent = OPPORTUNITIES.filter(o => o.launchDate >= '2026-01-01').slice(0, 8);
-    c.innerHTML = recent.map(o => \`
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;">
-          <div style="font-weight:500;font-size:14px;margin-bottom:2px;">\${o.title}</div>
-          <div style="font-size:12px;color:var(--ink3);">\${o.source} · Lansat: \${o.launchDate}</div>
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;">
-          <button onclick="openDetail(\${o.id})" style="font-size:12px;background:var(--accent-light);color:var(--accent);border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Detalii</button>
-          <button onclick="showToast('Publicat în index: #\${o.id}')" style="font-size:12px;background:var(--accent);color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:var(--font-body);">Publică</button>
-        </div>
-      </div>
-    \`).join('');
-  }
+  if (tab === 'new') { window.renderNewDetected(); return; }
 
   if (tab === 'dupes') {
     c.innerHTML = \`
@@ -2578,6 +2564,19 @@ function renderMatchResults(data) {
   }).join('');
 }
 
+function acceptPublishedOpportunity(item) {
+  const index = OPPORTUNITIES.findIndex(o => String(o.id) === String(item.id));
+  if (index >= 0) OPPORTUNITIES[index] = item; else OPPORTUNITIES.push(item);
+  const count = document.getElementById('cnt-active');
+  if (count) count.textContent = OPPORTUNITIES.filter(o => o.status === 'ACTIV').length;
+  const total = document.getElementById('cnt-today');
+  if (total) total.textContent = OPPORTUNITIES.length;
+  const stats = document.querySelectorAll('#admin-stats .admin-stat-val');
+  if (stats[0]) stats[0].textContent = OPPORTUNITIES.length;
+  if (stats[1]) stats[1].textContent = OPPORTUNITIES.filter(o => o.status === 'ACTIV').length;
+  renderResults(); renderClosingStrip();
+}
+
 async function reviewAction(id, action, btn) {
   if (btn) { btn.disabled = true; btn.textContent = '...'; }
   try {
@@ -2585,7 +2584,8 @@ async function reviewAction(id, action, btn) {
     const j = await r.json();
     if (j.ok) {
       showToast(action === 'approve' ? '\u2713 Publicat\u0103' : 'Respins\u0103');
-      if (action === 'approve') loadPublished();
+      if (action === 'approve' && j.item) acceptPublishedOpportunity(j.item);
+      if (action === 'approve') await loadPublished();
       switchAdminTab('review');
     } else {
       showToast('\u2717 ' + (j.error || 'Eroare'));
@@ -3755,7 +3755,7 @@ export default {
     if (pathname === '/api/review') {
       let rev = {};
       if (env.FINMATCH_KV) { try { const r = await env.FINMATCH_KV.get('opps:review'); if (r) rev = JSON.parse(r); } catch(e){} }
-      return jsonResp({ count: Object.keys(rev).length, items: Object.values(rev) });
+      return sourceJson({ count: Object.keys(rev).length, items: Object.values(rev) });
     }
 
     // Approve/reject a queued item.  POST /api/review/approve?id=  |  /reject?id=
@@ -3775,7 +3775,7 @@ export default {
         await env.FINMATCH_KV.put('opps:published', JSON.stringify(pub));
       }
       await env.FINMATCH_KV.put('opps:review', JSON.stringify(rev));
-      return jsonResp({ ok: true, action: pathname.endsWith('approve') ? 'approved' : 'rejected', id });
+      return sourceJson({ ok: true, action: pathname.endsWith('approve') ? 'approved' : 'rejected', id, item: pathname.endsWith('approve') ? item : null });
     }
 
     // Unpublish one auto item: POST /api/published/remove?id=   |  Purge all auto: POST /api/published/purge
